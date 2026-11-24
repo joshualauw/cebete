@@ -17,6 +17,13 @@ Skills that write or change code (currently **/seafarer**) must follow this file
 - Handle `undefined` explicitly: indexed access can return `undefined` (`noUncheckedIndexedAccess` is on), so check before use.
 - Treat external data (IndexedDB, network, `JSON.parse`, storage) as `unknown` until validated.
 
+## Comments
+
+- Do not comment excessively. Clear names and types should explain the code; do not narrate what the code already says.
+- Add a comment only when it is very important or must-know: a non-obvious reason (the *why*), a workaround, a hidden constraint, or a gotcha that would surprise the next reader.
+- No commented-out code, no changelog or ticket-history comments, and no section-banner or filler comments.
+- `@ts-expect-error` still needs its one-line reason (see above).
+
 ## Imports
 
 - Use the `@` alias for anything inside `src/` (for example `@/db/db`). Do not use relative paths that climb out of the current folder (`../../`).

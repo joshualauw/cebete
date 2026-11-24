@@ -23,9 +23,9 @@ A ticket folder in `docs/changes/` (the user names it; ask if unclear). If its `
 4. Work through groups **one at a time, in order**. Tick each `- [x]` as soon as it is truly done.
 5. Write the tests that prove the **Acceptance Criteria** and the *Constraints and edge cases* belonging to the current group; you decide the detailed tests. Tick a criterion in `spec.md` only when it passes.
 6. Do not edit `docs/specs/`; syncing is **/bookeeper**'s job.
-7. The **last task of every group** is the checks task. Do it only after all other tasks in the group are done: run, in the order from `.claude/rules/code-conventions.md`, **typecheck → format → lint → build → test**. Fix failures and rerun from the failing step. Tick it only when all five passed in this run. A group is not done, and you must not report it or move on, while this task is unticked.
-8. After a green group, report briefly (done, next) and **pause** for the user, unless told to run all groups straight through.
-9. When all groups pass, report and suggest **/bookeeper** to close and sync.
+7. The **last task of every group** is the checks task. Do it only after all other tasks in the group are done: run, in the order from `.claude/rules/code-conventions.md`, **typecheck → format → lint → build → test**. Fix failures and rerun from the failing step. Tick it only when all five passed in this run. A group is not done, and you must not move on to the next group, while this task is unticked.
+8. After a green group, **move straight on to the next one without pausing**. Do not stop for review between groups. Stop only when blocked or when a "When to stop and ask" condition applies; if you do stop, report which groups are done and what is needed. If the user asks to go one group at a time, pause after each green group.
+9. When all groups pass, report once (what was done, per group) and suggest **/bookeeper** to close and sync.
 
 ## Task groups
 
