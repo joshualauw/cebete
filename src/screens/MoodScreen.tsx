@@ -7,6 +7,7 @@ import MoodList from '@/mood/MoodList'
 
 export default function MoodScreen(): ReactElement {
   const [adding, setAdding] = useState(false)
+  const [editing, setEditing] = useState(false)
   const addButtonRef = useRef<HTMLButtonElement>(null)
   const wasAdding = useRef(false)
 
@@ -36,6 +37,7 @@ export default function MoodScreen(): ReactElement {
             size="lg"
             minH="12"
             width="full"
+            disabled={editing}
             onClick={() => {
               setAdding(true)
             }}
@@ -44,7 +46,7 @@ export default function MoodScreen(): ReactElement {
             Add entry
           </Button>
         )}
-        <MoodList />
+        <MoodList locked={adding} onEditingChange={setEditing} />
       </Stack>
     </Container>
   )

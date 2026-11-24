@@ -43,11 +43,10 @@ describe('addMoodEntry', () => {
     expect(stored?.emotions).toEqual(emotions)
   })
 
-  it('sets the time itself, ignoring any time a caller passes in', async () => {
+  it('stamps the entry with the moment of saving when no time is given', async () => {
     vi.spyOn(Date, 'now').mockReturnValue(5_000)
-    const withFakeTime = { ...oneEmotion('happy', 8), createdAt: 1 }
 
-    const saved = await addMoodEntry(withFakeTime)
+    const saved = await addMoodEntry(oneEmotion('happy', 8))
 
     expect(saved.createdAt).toBe(5_000)
     expect((await db.moodEntries.toArray()).map((entry) => entry.createdAt)).toEqual([5_000])

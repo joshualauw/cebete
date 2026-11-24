@@ -18,3 +18,22 @@ export function joinEmotionLabels(ratings: readonly EmotionRating[]): string {
 export function formatEntryTime(timestamp: number): string {
   return entryTimeFormat.format(timestamp)
 }
+
+function pad(value: number): string {
+  return String(value).padStart(2, '0')
+}
+
+/**
+ * A time as the text a date and time field holds, in the user's own time zone and to the
+ * minute, for example "2026-11-24T09:30".
+ */
+export function toDateTimeFieldValue(timestamp: number): string {
+  const date = new Date(timestamp)
+
+  return `${String(date.getFullYear())}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
+/** The time a date and time field holds, or NaN when the field is empty or not a real moment. */
+export function fromDateTimeFieldValue(value: string): number {
+  return value === '' ? Number.NaN : new Date(value).getTime()
+}

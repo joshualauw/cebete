@@ -22,11 +22,23 @@ export type EmotionRating = {
   readonly intensity: number
 }
 
-/** What a caller provides when adding an entry. The time is never supplied. */
+/** The content of an entry: what the user chooses, without the time it was recorded. */
 export type NewMoodEntry = {
   /** One to MAX_EMOTIONS ratings, none repeating an emotion, in the order they were chosen. */
   readonly emotions: readonly EmotionRating[]
   readonly note?: string
+}
+
+/** What a caller provides when adding an entry: its content, and optionally when it happened. */
+export type NewMoodEntryInput = NewMoodEntry & {
+  /** When the feeling happened. Left out, the entry is stamped with the moment it is saved. */
+  readonly createdAt?: number
+}
+
+/** What a caller provides when editing an entry: everything in it, including the recorded time. */
+export type MoodEntryChanges = NewMoodEntry & {
+  /** When the entry was recorded, in milliseconds since 1970. It cannot be in the future. */
+  readonly createdAt: number
 }
 
 /** A saved mood entry. */

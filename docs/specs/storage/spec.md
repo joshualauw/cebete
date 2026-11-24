@@ -23,7 +23,7 @@ flowchart LR
 ## Data and files
 
 - **Library:** Dexie on IndexedDB. The database is named `cebete`.
-- **Schema:** currently version 3, with one table, `moodEntries`, listed by the time each entry was saved. Versions 1 and 2 stay declared, because a device may still hold a database made by one of them. Dexie stores the version internally at ten times its declared value.
+- **Schema:** currently version 3, with one table, `moodEntries`, listed by the time each entry was recorded. Versions 1 and 2 stay declared, because a device may still hold a database made by one of them. Dexie stores the version internally at ten times its declared value.
 - **Code:** `src/db/`, with the database definition, the persistence request, and the startup routine that combines them. Startup is called from `src/main.tsx`. The conversion of old entries is a separate pure function in `src/mood/migration.ts`, which the database upgrade uses.
 - **Tests:** in `tests/db/`, run against an in-memory IndexedDB (`fake-indexeddb`), so no real browser is needed. They include upgrading databases built in the older layouts.
 

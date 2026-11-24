@@ -1,6 +1,6 @@
 import { Box, Button, chakra, Flex, Stack, Text, VisuallyHidden } from '@chakra-ui/react'
 import { type ReactElement, useEffect, useRef, useState } from 'react'
-import { LuTrash2 } from 'react-icons/lu'
+import { LuPencil, LuTrash2 } from 'react-icons/lu'
 
 import { emotionLabel } from './emotions'
 import { formatEntryTime, joinEmotionLabels } from './format'
@@ -11,21 +11,41 @@ type MoodEntryItemProps = {
   entry: MoodEntry
   /** Called after the entry has been deleted. */
   onDeleted: () => void
+  /** Called when the user chooses Edit. Without it the entry has no Edit action. */
+  onEdit?: () => void
+  /** Switches the Edit action off, for example while a form is open. */
+  editDisabled?: boolean
+  /** Moves focus to the Edit action when the entry appears, after its form was closed. */
+  focusEdit?: boolean
 }
 
 const DELETE_FAILED = 'This entry could not be deleted right now. Please try again.'
 
 /** One mood entry: each emotion with its rating, the note if any, and when it was recorded. */
-export default function MoodEntryItem({ entry, onDeleted }: MoodEntryItemProps): ReactElement {
+export default function MoodEntryItem({
+  entry,
+  onDeleted,
+  onEdit,
+  editDisabled = false,
+  focusEdit = false,
+}: MoodEntryItemProps): ReactElement {
   const [confirming, setConfirming] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const keepRef = useRef<HTMLButtonElement>(null)
   const deleteRef = useRef<HTMLButtonElement>(null)
+  const editRef = useRef<HTMLButtonElement>(null)
   const wasConfirming = useRef(false)
 
   const labels = joinEmotionLabels(entry.emotions)
   const time = formatEntryTime(entry.createdAt)
+
+  // Coming back from the edit form, put focus on the Edit action so the user keeps their place.
+  useEffect(() => {
+    if (focusEdit) {
+      editRef.current?.focus()
+    }
+  }, [focusEdit])
 
   // Focus the safe choice when the question opens, and return to Delete when it is dismissed.
   useEffect(() => {
@@ -117,18 +137,33 @@ export default function MoodEntryItem({ entry, onDeleted }: MoodEntryItemProps):
           >
             {time}
           </chakra.time>
-          <Button
-            ref={deleteRef}
-            variant="ghost"
-            minH="12"
-            aria-label={`Delete the ${labels} entry from ${time}`}
-            onClick={() => {
-              setConfirming(true)
-            }}
-          >
-            <LuTrash2 aria-hidden="true" />
-            Delete
-          </Button>
+          <Flex gap="1">
+            {onEdit ? (
+              <Button
+                ref={editRef}
+                variant="ghost"
+                minH="12"
+                disabled={editDisabled}
+                aria-label={`Edit the ${labels} entry from ${time}`}
+                onClick={onEdit}
+              >
+                <LuPencil aria-hidden="true" />
+                Edit
+              </Button>
+            ) : null}
+            <Button
+              ref={deleteRef}
+              variant="ghost"
+              minH="12"
+              aria-label={`Delete the ${labels} entry from ${time}`}
+              onClick={() => {
+                setConfirming(true)
+              }}
+            >
+              <LuTrash2 aria-hidden="true" />
+              Delete
+            </Button>
+          </Flex>
         </Flex>
       )}
     </Box>

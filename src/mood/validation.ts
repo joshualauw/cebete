@@ -5,11 +5,12 @@ import {
   INTENSITY_MIN,
   MAX_EMOTIONS,
   type MoodEntry,
+  type MoodEntryChanges,
   type NewMoodEntry,
   NOTE_MAX_LENGTH,
 } from './types'
 
-export type InvalidMoodEntryField = 'entry' | 'emotions' | 'intensity' | 'note'
+export type InvalidMoodEntryField = 'entry' | 'emotions' | 'intensity' | 'note' | 'time'
 
 /** Thrown when an entry breaks a rule. Nothing is saved when this happens. */
 export class InvalidMoodEntryError extends Error {
@@ -96,6 +97,36 @@ export function validateNewMoodEntry(input: unknown): NewMoodEntry {
 
   // An empty note is no note: it is left out instead of being saved as an empty string.
   return trimmedNote ? { emotions: ratings, note: trimmedNote } : { emotions: ratings }
+}
+
+/**
+ * Checks the time an entry was recorded: it must be a real moment and cannot be in the future.
+ */
+export function validateRecordedTime(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    throw new InvalidMoodEntryError('time', 'Choose a valid date and time.')
+  }
+
+  if (value > Date.now()) {
+    throw new InvalidMoodEntryError('time', 'The date and time cannot be in the future.')
+  }
+
+  return value
+}
+
+/**
+ * Checks an edited entry: the same rules as a new one, plus its recorded time, which must be a
+ * real moment and cannot be in the future. Returns a clean copy built from the checked fields.
+ */
+export function validateMoodEntryChanges(input: unknown): MoodEntryChanges {
+  const entry = validateNewMoodEntry(input)
+  const createdAt = validateRecordedTime(
+    typeof input === 'object' && input !== null && 'createdAt' in input
+      ? input.createdAt
+      : undefined,
+  )
+
+  return { ...entry, createdAt }
 }
 
 /**

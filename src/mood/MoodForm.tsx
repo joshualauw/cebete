@@ -4,13 +4,25 @@ import { type ReactElement, type SubmitEvent, useEffect, useId, useRef, useState
 import EmotionPicker from './EmotionPicker'
 import EmotionRatings from './EmotionRatings'
 import type { Emotion } from './emotions'
-import { addMoodEntry } from './repository'
-import { type EmotionRating, INTENSITY_DEFAULT, MAX_EMOTIONS, NOTE_MAX_LENGTH } from './types'
+import { fromDateTimeFieldValue, toDateTimeFieldValue } from './format'
+import { MoodEntryNotFoundError } from './errors'
+import { addMoodEntry, updateMoodEntry } from './repository'
+import {
+  type EmotionRating,
+  INTENSITY_DEFAULT,
+  MAX_EMOTIONS,
+  type MoodEntry,
+  NOTE_MAX_LENGTH,
+} from './types'
 import { InvalidMoodEntryError } from './validation'
 
 type MoodFormProps = {
   /** Called when the form should close, after a successful save or when the user cancels. */
   onDone: () => void
+  /** Called after a save succeeds, just before the form closes. */
+  onSaved?: () => void
+  /** The entry to change. Without it the form adds a new entry. */
+  entry?: MoodEntry
 }
 
 const SAVE_FAILED = 'Your entry could not be saved right now. Please try again.'
@@ -29,19 +41,26 @@ const fieldStyles = {
 } as const
 
 /**
- * The form for a new mood entry: one to three emotions, a 0 to 10 rating for each, and an
- * optional note.
+ * The form for a mood entry: one to three emotions, a 0 to 10 rating for each, and an optional
+ * note. Given an entry it edits that entry instead, starting from its values, and also shows the
+ * date and time it was recorded.
  */
-export default function MoodForm({ onDone }: MoodFormProps): ReactElement {
+export default function MoodForm({ onDone, onSaved, entry }: MoodFormProps): ReactElement {
   const id = useId()
   const titleId = `${id}-title`
   const noteId = `${id}-note`
   const noteCountId = `${id}-note-count`
+  const timeId = `${id}-time`
   const saveHintId = `${id}-save-hint`
 
-  const [ratings, setRatings] = useState<readonly EmotionRating[]>([])
-  const [note, setNote] = useState('')
+  const [ratings, setRatings] = useState<readonly EmotionRating[]>(entry?.emotions ?? [])
+  const [note, setNote] = useState(entry?.note ?? '')
+  // The field only shows the minute, so the time is left to the saved entry (or the moment of
+  // saving) unless the user changes the field.
+  const [initialTime] = useState(() => toDateTimeFieldValue(entry?.createdAt ?? Date.now()))
+  const [time, setTime] = useState(initialTime)
   const [saving, setSaving] = useState(false)
+  const [gone, setGone] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const titleRef = useRef<HTMLHeadingElement>(null)
 
@@ -82,10 +101,28 @@ export default function MoodForm({ onDone }: MoodFormProps): ReactElement {
     setErrorMessage(null)
 
     try {
-      await addMoodEntry({ emotions: ratings, note })
+      const chosen = time === initialTime ? undefined : fromDateTimeFieldValue(time)
+
+      if (entry) {
+        await updateMoodEntry(entry.id, {
+          emotions: ratings,
+          note,
+          createdAt: chosen ?? entry.createdAt,
+        })
+      } else {
+        await addMoodEntry(
+          chosen === undefined
+            ? { emotions: ratings, note }
+            : { emotions: ratings, note, createdAt: chosen },
+        )
+      }
+      onSaved?.()
       onDone()
     } catch (error) {
-      if (error instanceof InvalidMoodEntryError) {
+      if (error instanceof MoodEntryNotFoundError) {
+        setGone(true)
+        setErrorMessage(error.message)
+      } else if (error instanceof InvalidMoodEntryError) {
         setErrorMessage(error.message)
       } else {
         console.error('Mood entry could not be saved', error)
@@ -122,7 +159,7 @@ export default function MoodForm({ onDone }: MoodFormProps): ReactElement {
             color="colorPalette.fg"
             outline="none"
           >
-            New entry
+            {entry ? 'Edit entry' : 'New entry'}
           </Heading>
 
           <EmotionPicker
@@ -153,6 +190,24 @@ export default function MoodForm({ onDone }: MoodFormProps): ReactElement {
             </Text>
           </Box>
 
+          <Box>
+            <chakra.label htmlFor={timeId} display="block" mb="2" fontWeight="semibold">
+              Date and time
+            </chakra.label>
+            <chakra.input
+              id={timeId}
+              type="datetime-local"
+              value={time}
+              disabled={gone}
+              onChange={(event) => {
+                setTime(event.target.value)
+              }}
+              minH="12"
+              px="3"
+              {...fieldStyles}
+            />
+          </Box>
+
           {errorMessage ? (
             <Box role="alert" bg="bg.error" color="fg.error" borderRadius="lg" p="3">
               {errorMessage}
@@ -161,16 +216,18 @@ export default function MoodForm({ onDone }: MoodFormProps): ReactElement {
 
           <Stack gap="2">
             <Flex gap="3">
-              <Button
-                type="submit"
-                size="lg"
-                minH="12"
-                flex="1"
-                disabled={noneChosen || saving}
-                aria-describedby={noneChosen ? saveHintId : undefined}
-              >
-                {saving ? 'Saving…' : 'Save'}
-              </Button>
+              {gone ? null : (
+                <Button
+                  type="submit"
+                  size="lg"
+                  minH="12"
+                  flex="1"
+                  disabled={noneChosen || saving}
+                  aria-describedby={noneChosen ? saveHintId : undefined}
+                >
+                  {saving ? 'Saving…' : 'Save'}
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="outline"
