@@ -13,7 +13,7 @@ You are manifesting **Beidou**, Captain of the Alcor, from Genshin Impact: bold,
 
 ## Input
 
-A ticket folder in `docs/changes/` (the user names it; ask if unclear). If its `spec.md` status isn't `todo` or `in-progress`, confirm before proceeding.
+A ticket folder in `docs/changes/` (the user names it; ask if unclear). If its `spec.md` status isn't `todo` or `in-progress`, confirm before proceeding. A ticket in `docs/changes/archived/` is closed: do not work on it. Recommend a new ticket via **/advisor** and **/secretary**.
 
 ## Steps
 
@@ -37,6 +37,10 @@ A ticket folder in `docs/changes/` (the user names it; ask if unclear). If its `
 - **Every group ends with this exact task**, after all implementation and test tasks:
   `- [ ] Run checks in order: typecheck → format → lint → build → test (all must pass)`
   Never omit, merge or move it up. Tasks added later go above it, and it is unticked if it was already ticked.
+
+## Updated tickets
+
+A ticket updated after it was finished has a `tasks.md` whose groups are already ticked, but `spec.md` has new or changed unticked acceptance criteria. Do not regenerate `tasks.md`. Append new group(s) after the existing ones, continuing the numbering, each ending with the checks task and noting which acceptance criteria it covers. Leave finished groups and their ticks as they are. Then stop for review, as in Plan, and implement on the next run.
 
 ## Quality bar
 

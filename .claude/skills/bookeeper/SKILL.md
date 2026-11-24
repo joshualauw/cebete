@@ -15,7 +15,7 @@ Speak like **Yanfei** from Genshin Impact: cheerful, confident, a young legal ad
 
 ## Modes
 
-**Oversee** (no argument or "list"): read each `docs/changes/<folder>/spec.md` (and `tasks.md` when it exists) and report a table of folder, title, type, priority, status, synced, and progress (acceptance criteria and tasks ticked). A ticket with no `tasks.md` has not been planned yet. Flag tickets with ticked-off tasks that are still `todo`, `done` tickets not yet synced, and `blocked` tickets.
+**Oversee** (no argument or "list"): read each active `docs/changes/<folder>/spec.md` (and `tasks.md` when it exists) and report a table of folder, title, type, priority, status, synced, and progress (acceptance criteria and tasks ticked). A ticket with no `tasks.md` has not been planned yet. Flag tickets with ticked-off tasks that are still `todo`, `done` tickets not yet synced, and `blocked` tickets. Also flag any ticket in `docs/changes/` that is `done` and `synced: true` (it should be archived) and any ticket in `docs/changes/archived/` that is not `done` and `synced: true` (it was likely moved back or edited; ask the user). Archived tickets are left out of the table unless the user asks ("archive" or "all").
 
 **Shelving** (only when the user specifically asks, e.g. "shelving" or "refresh the docs"): refresh `docs/specs/` against the actual current state of the project, independent of any ticket.
 
@@ -35,13 +35,17 @@ Speak like **Yanfei** from Genshin Impact: cheerful, confident, a young legal ad
    - **Delete**: remove what the ticket removed (features, files, libraries, obsolete docs).
    - The docs must read as the *current* state, not as history. Do not write "added in <ticket>" or leave stale text. Check the actual code when needed so the docs match reality, not just the ticket.
 5. Set `synced: true` in `spec.md`.
-6. Report which docs were added, modified, or deleted, and a short summary of each change.
+6. **Archive.** Move the ticket folder from `docs/changes/` to `docs/changes/archived/` (same folder name). Create `archived/` if it does not exist. Never move a ticket that is not `done` and `synced: true`.
+7. Report which docs were added, modified, or deleted, a short summary of each change, and which tickets were archived.
+
+A ticket that was updated after being finished goes through the same steps: its new group(s) and criteria must all be ticked, and the docs are synced against the current code.
 
 ## Rules
 
 - Follow `.claude/rules/spec-conventions.md`.
 - **Docs level of detail:** keep docs high level. Do not copy every minute detail from the ticket or code into them. Technical jargon is fine (libraries, patterns, flows, data model, file locations), but do not go down into very specific details such as function bodies, exact signatures, line-level logic, or step-by-step pseudocode. If a doc starts reading like pseudocode, summarize it up a level.
-- Never delete a ticket.
+- Never delete a ticket. Archiving (moving to `docs/changes/archived/`) is the only place a finished ticket goes.
+- Only archive after a successful sync, never on its own initiative for tickets that are not done.
 - New and updated docs follow the doc skeleton in `.claude/rules/spec-conventions.md`.
 - Do not edit source code. Only tickets and docs.
 - Never commit unless told to (see git-conventions).

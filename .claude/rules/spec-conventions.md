@@ -29,6 +29,8 @@ Every doc uses these `##` sections, in this order. What goes inside each section
 
 Each ticket is a **folder**: `docs/changes/DD-MM-YY-<kebab-title>/` (e.g. `docs/changes/23-11-26-google-auth/`). The folder name is the ticket's identity; there is no sequential number. If a same-day, same-title clash happens, add a short suffix.
 
+**Active vs archived.** `docs/changes/` itself holds only **active** tickets: just created, in progress, blocked, or done but not yet synced. Once bookeeper has synced a ticket (`status: done`, `synced: true`) the folder moves to `docs/changes/archived/DD-MM-YY-<kebab-title>/`. So a glance at `docs/changes/` shows what is still open. The folder name never changes when it moves.
+
 | File       | Owner     | Holds                                                                  |
 | ---------- | --------- | ---------------------------------------------------------------------- |
 | `spec.md`  | secretary | Frontmatter plus the agreed spec. Never contains tasks.                |
@@ -73,6 +75,22 @@ Then these sections, in order. Omit an optional section when it is empty (no "n/
 
 - Tickets are the delta; docs are the result. When a ticket is done, its changes are **merged into `docs/specs/` as a delta**: additions, modifications **and removals** (e.g. a ticket that removes a feature removes it from the doc).
 - Seafarer ticks tasks in `tasks.md` and acceptance criteria in `spec.md` as they truly pass.
-- A ticket is never deleted. It stays as the record of the change.
+- A ticket is never deleted. It stays as the record of the change, in `docs/changes/archived/` once synced.
 - Tickets created before this layout keep their original, longer specs; they are exempt from the word cap and the section shape.
 - Tickets and docs changes are not committed unless the user says so (see git-conventions).
+
+### Updating an active ticket
+
+An **active** ticket (in `docs/changes/`, any status, including `done` but not yet synced) can be updated in place to add or tweak a **minor** behavior, instead of creating a new ticket. **/advisor** judges which is right; the user can overrule it.
+
+Update in place only when **all** hold:
+
+- Same user story and goal as the ticket, only a small addition or adjustment (roughly 1 to 2 new or changed acceptance criteria).
+- Same `modules`; no new module.
+- The amended `spec.md` still fits the 600-word cap.
+
+Otherwise create a **new ticket** (new user story, new module, spec over the cap, or a follow-up that stands on its own).
+
+To update: **/secretary** amends `spec.md` in place (it stays the current agreement, not a changelog), adds or changes the acceptance criteria as unticked, and, if the ticket was `done`, sets `status: todo`. **/seafarer** then appends new group(s) to `tasks.md` (keeping finished groups ticked) and implements them. **/bookeeper** syncs `docs/specs/` and archives the ticket as usual.
+
+**Archived tickets are not updated.** They are closed records, and the docs, other tickets or even their modules may have moved on since. If asked to update an archived ticket, **/advisor** and **/secretary** warn that it is risky and recommend a new ticket (the archived one can be cited under Scope as related work). Only if the user still insists does secretary move the folder back to `docs/changes/`, set `synced: false`, and treat it as an active ticket.

@@ -41,6 +41,12 @@ If the discussion cannot fit in one spec (it will not fit in 600 words, or it co
 
 ## Updating an existing ticket
 
-If the user asks to revise a ticket (typically because **/seafarer** found a requested change that differs from the spec), edit `spec.md` so it reflects the new agreement, keeping it within the shape and the word cap. Do not touch `tasks.md`: tell the user to run **/seafarer**, which will regenerate the tasks from the updated spec.
+If the user asks to revise an **active** ticket in `docs/changes/` (typically because **/seafarer** found a requested change that differs from the spec, or the user wants to tweak a minor behavior, including on a `done` ticket that is not yet synced), follow "Updating an active ticket" in `.claude/rules/spec-conventions.md`:
+
+1. Confirm it qualifies (same story, goal and modules; fits the 600-word cap after the change). If not, say so and propose a new ticket instead.
+2. Edit `spec.md` in place so it reflects the new agreement, within the shape and the word cap. Add new or changed acceptance criteria as unticked `- [ ]`; keep the ones already ticked that still hold. If the ticket was `done`, set `status: todo`.
+3. Do not touch `tasks.md`. Tell the user to run **/seafarer**, which will update the tasks (keeping ticked tasks that still apply, or appending new group(s) for a finished ticket).
+
+**Archived tickets** (in `docs/changes/archived/`): do not update them silently. Tell the user it is risky, because the docs, other tickets or its modules may have moved on, and recommend a new ticket instead, citing the archived one under Scope as related work. Only if the user still insists, move the folder back to `docs/changes/`, set `synced: false`, and proceed as above.
 
 Do not commit.
