@@ -31,15 +31,22 @@ describe('App sections', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'cebete' })).toBeInTheDocument()
   })
 
-  it.each([
-    ['/mood', 'Mood'],
-    ['/settings', 'Settings'],
-  ])('opens straight onto the %s section when the page is loaded there', (route, title) => {
-    renderAppAt(route)
+  it('opens straight onto the Mood section when the page is loaded there', async () => {
+    renderAppAt('/mood')
 
-    expect(screen.getByRole('heading', { level: 1, name: title })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Mood' })).toBeInTheDocument()
+    expect(screen.getByTestId('address')).toHaveTextContent('/mood')
+    // The mood log has its own screen now, not the placeholder.
+    expect(await screen.findByText(/no entries yet/i)).toBeInTheDocument()
+    expect(screen.queryByText(/coming soon/i)).not.toBeInTheDocument()
+  })
+
+  it('opens straight onto the Settings section when the page is loaded there', () => {
+    renderAppAt('/settings')
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Settings' })).toBeInTheDocument()
     expect(screen.getByText(/coming soon/i)).toBeInTheDocument()
-    expect(screen.getByTestId('address')).toHaveTextContent(route)
+    expect(screen.getByTestId('address')).toHaveTextContent('/settings')
   })
 
   it('does not show the other sections', () => {

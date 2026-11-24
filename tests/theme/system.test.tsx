@@ -102,6 +102,7 @@ describe('cebete theme: readable contrast', () => {
     ['subtle text on the page background', 'fg.subtle', 'bg.subtle'],
     ['subtle text on a surface', 'fg.subtle', 'bg'],
     ['button text on the main colour', 'brand.contrast', 'brand.solid'],
+    ['button text on the destructive colour', 'white', 'red.solid'],
     ['active item on a surface', 'brand.fg', 'bg'],
     ['active item on its highlight', 'brand.fg', 'brand.subtle'],
     ['error text on the error background', 'fg.error', 'bg.error'],
