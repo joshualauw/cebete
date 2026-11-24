@@ -1,7 +1,17 @@
+import { Container, Heading, Stack } from '@chakra-ui/react'
 import type { ReactElement } from 'react'
 
-import ComingSoon from './ComingSoon'
+import BackupSection from '@/backup/BackupSection'
 
 export default function SettingsScreen(): ReactElement {
-  return <ComingSoon title="Settings" message="Backup and other options will live here." />
+  return (
+    <Container maxW="lg" px="6" py="10">
+      <Stack gap="6">
+        <Heading as="h1" size="2xl" color="colorPalette.fg">
+          Settings
+        </Heading>
+        <BackupSection />
+      </Stack>
+    </Container>
+  )
 }

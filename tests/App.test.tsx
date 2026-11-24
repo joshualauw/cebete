@@ -45,7 +45,8 @@ describe('App sections', () => {
     renderAppAt('/settings')
 
     expect(screen.getByRole('heading', { level: 1, name: 'Settings' })).toBeInTheDocument()
-    expect(screen.getByText(/coming soon/i)).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Backup' })).toBeInTheDocument()
+    expect(screen.queryByText(/coming soon/i)).not.toBeInTheDocument()
     expect(screen.getByTestId('address')).toHaveTextContent('/settings')
   })
 

@@ -1,6 +1,6 @@
 ## Summary
 
-The app shell is the frame of cebete: a React single-page app, built with Vite, with a calm teal look and a bottom navigation bar between its sections. It installs as a PWA, opens offline, and carries its own identity (name and icon). It also owns the project's quality tooling. It does not cover the content of the CBT features (see [mood-log](../mood-log/spec.md); Settings is a placeholder for now) or the local database (see [storage](../storage/spec.md)).
+The app shell is the frame of cebete: a React single-page app, built with Vite, with a calm teal look and a bottom navigation bar between its sections. It installs as a PWA, opens offline, and carries its own identity (name and icon). It also owns the project's quality tooling. It does not cover the content of the CBT features (see [mood-log](../mood-log/spec.md) and [backup](../backup/spec.md)) or the local database (see [storage](../storage/spec.md)).
 
 ## How it works
 
@@ -15,7 +15,7 @@ flowchart TD
 ```
 
 - **Sections and addresses:** Home (`/`), Mood (`/mood`) and Settings (`/settings`). The current section is part of the address, so a reload or the browser's back and forward buttons keep the user in place. Any unknown address goes to Home.
-- **Screens:** Home shows the "cebete" heading and a short welcome. Mood hosts the mood log (see [mood-log](../mood-log/spec.md)). Settings is a simple "coming soon" placeholder until its own feature exists.
+- **Screens:** Home shows the "cebete" heading and a short welcome. Mood hosts the mood log (see [mood-log](../mood-log/spec.md)). Settings shows a Backup section for saving and restoring the user's data (see [backup](../backup/spec.md)).
 - **Bottom bar:** fixed at the bottom of every screen, with an icon and a label per section. The current section is highlighted and marked as current for assistive technology. The bar is a navigation landmark named "Main". It holds at most five items, so a new module must earn a place or live inside an existing section.
 - **Look:** built with Chakra UI. The main colour is a calm teal that matches the icon, on faint teal-tinted neutral surfaces with soft dark text. The app is light only. The theme is defined in one place, so the palette is set once.
 - **Install:** the manifest names the app "cebete", opens it standalone from `/`, uses the brand teal as its theme colour, and declares the standard, 512 and maskable icons. A supporting browser offers installation.
@@ -41,8 +41,9 @@ flowchart TD
 | ----------------------------- | ---------------------------------------------------------------- |
 | `src/main.tsx`                | Entry point: wires the theme, the router and storage startup     |
 | `src/App.tsx`                 | Page frame: the routes, the bottom bar, and room for the bar     |
-| `src/screens/`                | The Home and Mood screens, and the Settings placeholder          |
+| `src/screens/`                | The Home, Mood and Settings screens                              |
 | `src/mood/`                   | The mood log feature: its rules, storage access and components   |
+| `src/backup/`                 | The backup feature: file rules and the Backup section            |
 | `src/navigation/`             | Section addresses, the bar's items, the bar itself, bar sizing   |
 | `src/theme/`                  | The colour palettes and the theme definition                     |
 | `pwa.config.ts`               | Manifest and service worker settings, tested directly            |
@@ -76,3 +77,4 @@ The five checks are the npm scripts `typecheck`, `format`, `lint`, `build` and `
 
 - [storage](../storage/spec.md): the local database opened at startup.
 - [mood-log](../mood-log/spec.md): the feature shown in the Mood section.
+- [backup](../backup/spec.md): the feature shown in the Settings section.

@@ -2,10 +2,10 @@
 title: Data export and import
 type: feat
 priority: high
-status: todo
+status: done
 date: 2026-11-24
 modules: [backup, storage]
-synced: false
+synced: true
 ---
 
 ## User Story
@@ -54,8 +54,8 @@ From the Settings section, the user chooses export and receives one file contain
 
 ## Acceptance Criteria
 
-- [ ] When the user chooses export, a single backup file containing all their data is downloaded.
-- [ ] When the user picks a valid backup file to import, the app warns that current data will be replaced and asks to confirm.
-- [ ] When the user confirms, their data matches the backup and a success message is shown.
-- [ ] When the user cancels the import, their data is unchanged.
-- [ ] When the user picks an invalid file, an error is shown and their data is unchanged.
+- [x] When the user chooses export, a single backup file containing all their data is downloaded.
+- [x] When the user picks a valid backup file to import, the app warns that current data will be replaced and asks to confirm.
+- [x] When the user confirms, their data matches the backup and a success message is shown.
+- [x] When the user cancels the import, their data is unchanged.
+- [x] When the user picks an invalid file, an error is shown and their data is unchanged.

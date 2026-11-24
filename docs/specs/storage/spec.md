@@ -1,6 +1,6 @@
 ## Summary
 
-Storage is cebete's local-only data layer: an IndexedDB database managed through Dexie, with a versioned schema that feature modules extend. All user data lives on the device and is never sent to a server. It currently holds the mood entries (see [mood-log](../mood-log/spec.md)), and it does not include backup or sync.
+Storage is cebete's local-only data layer: an IndexedDB database managed through Dexie, with a versioned schema that feature modules extend. All user data lives on the device and is never sent to a server. It currently holds the mood entries (see [mood-log](../mood-log/spec.md)), and it does not include sync. Backup and restore are in [backup](../backup/spec.md).
 
 ## How it works
 
@@ -30,8 +30,9 @@ flowchart LR
 ## Rules and edge cases
 
 - The schema is versioned from the start; later changes must add a version instead of editing an old one.
+- **Every table must be registered for backup.** A test fails if a table exists that the backup does not cover (see [backup](../backup/spec.md)). The backup file carries the schema version, so a new version also means older backups need a conversion.
 - **An upgrade must never stop the app from opening.** The conversion of old entries never throws. A row it does not recognise, because it is already converted or damaged, is left exactly as it is and never deleted, and the mood list leaves out rows it cannot read. Running the conversion again changes nothing.
-- **The conversion is lossy and cannot be undone.** The 0 to 100 scale becomes 0 to 10, so old ratings of 1 to 4 become 0 and a rating of 5 becomes 1. There is no backup feature yet.
+- **The conversion is lossy and cannot be undone.** The 0 to 100 scale becomes 0 to 10, so old ratings of 1 to 4 become 0 and a rating of 5 becomes 1. Exporting a backup first keeps the old ratings (see [backup](../backup/spec.md)).
 - No user data leaves the device. A browser check of the production build showed every request going to the app's own origin.
 - Clearing site data in the browser erases all stored data. Persistent storage lowers the risk of eviction but does not remove it, and a headless browser refuses it.
 - Firefox may show its permission prompt again at a later start after a refusal.
@@ -40,3 +41,4 @@ flowchart LR
 
 - [app-shell](../app-shell/spec.md): starts storage and provides the offline-capable app around it.
 - [mood-log](../mood-log/spec.md): the feature that stores its entries here.
+- [backup](../backup/spec.md): exports and restores everything stored here.

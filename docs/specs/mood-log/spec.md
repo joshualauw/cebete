@@ -1,6 +1,6 @@
 ## Summary
 
-The mood log is cebete's first CBT feature: a private log, kept only on the device, of how the user feels. Each entry records one to three emotions, each rated from 0 to 10, with an optional short note and the time it was saved. Entries can be added and deleted. It does not cover editing an entry, trends and insights, linking entries to thoughts, or backup.
+The mood log is cebete's first CBT feature: a private log, kept only on the device, of how the user feels. Each entry records one to three emotions, each rated from 0 to 10, with an optional short note and the time it was saved. Entries can be added and deleted. It does not cover editing an entry, trends and insights, or linking entries to thoughts. Entries are included in backups (see [backup](../backup/spec.md)).
 
 ## How it works
 
