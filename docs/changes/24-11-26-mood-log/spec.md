@@ -2,10 +2,10 @@
 title: Mood log
 type: feat
 priority: medium
-status: todo
+status: done
 date: 2026-11-24
 modules: [mood-log]
-synced: false
+synced: true
 ---
 
 ## User Story
@@ -57,9 +57,9 @@ When there are no entries, the section shows a short empty state inviting the us
 
 ## Acceptance Criteria
 
-- [ ] When the user opens the mood log, past entries are shown newest first.
-- [ ] When the user adds an entry with an emotion and intensity, it appears at the top of the list.
-- [ ] When the user adds an optional note, it is shown with the entry.
-- [ ] When the user deletes an entry, it disappears from the list.
-- [ ] When the user closes and reopens the app, including offline, their entries are still there.
-- [ ] When there are no entries, an empty state invites the user to add one.
+- [x] When the user opens the mood log, past entries are shown newest first.
+- [x] When the user adds an entry with an emotion and intensity, it appears at the top of the list.
+- [x] When the user adds an optional note, it is shown with the entry.
+- [x] When the user deletes an entry, it disappears from the list.
+- [x] When the user closes and reopens the app, including offline, their entries are still there.
+- [x] When there are no entries, an empty state invites the user to add one.
