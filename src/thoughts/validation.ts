@@ -80,6 +80,26 @@ function checkBelief(belief: unknown): asserts belief is number {
 }
 
 /**
+ * A moment the app stamped on a part of a record. It may be absent, for parts saved before dates
+ * existed, but a value that is there must be a real moment, or the part counts as damaged.
+ */
+function checkedMoment(
+  value: unknown,
+  field: 'challengedAt' | 'testedAt',
+  name: string,
+): number | undefined {
+  if (value === undefined) {
+    return undefined
+  }
+
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value <= 0) {
+    throw new InvalidThoughtRecordError(field, `${name} must be a real moment.`)
+  }
+
+  return value
+}
+
+/**
  * Checks a thought record against the rules and returns a clean copy of it. The thought and at
  * least one feeling are required; blank optional answers are left out instead of being saved.
  */
@@ -148,6 +168,11 @@ export function validateChallenge(input: unknown): ThoughtChallenge {
   const emotions = asThoughtRecordCheck(() =>
     validateEmotionRatings('emotions' in input ? input.emotions : undefined),
   )
+  const challengedAt = checkedMoment(
+    'challengedAt' in input ? input.challengedAt : undefined,
+    'challengedAt',
+    'The date of the challenge',
+  )
 
   if (balanced === '') {
     throw new InvalidThoughtRecordError('balanced', 'Write a more balanced thought.')
@@ -161,6 +186,7 @@ export function validateChallenge(input: unknown): ThoughtChallenge {
     balanced,
     belief,
     emotions,
+    ...(challengedAt !== undefined && { challengedAt }),
   }
 }
 
@@ -207,6 +233,11 @@ export function validateTest(input: unknown): ThoughtTest {
     'What happened',
   )
   const belief = 'belief' in input ? input.belief : undefined
+  const testedAt = checkedMoment(
+    'testedAt' in input ? input.testedAt : undefined,
+    'testedAt',
+    'The date of the test',
+  )
 
   if (result === '') {
     throw new InvalidThoughtRecordError('result', 'Write what happened when you tested it.')
@@ -214,7 +245,7 @@ export function validateTest(input: unknown): ThoughtTest {
 
   checkBelief(belief)
 
-  return { status, plan, prediction, result, belief }
+  return { status, plan, prediction, result, belief, ...(testedAt !== undefined && { testedAt }) }
 }
 
 /**

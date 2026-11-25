@@ -1,4 +1,9 @@
-import type { NewThoughtRecord } from '@/thoughts/types'
+import type { NewThoughtRecord, ThoughtTest } from '@/thoughts/types'
+
+/** When a logged test's result was dated, or `undefined` for a planned or an undated test. */
+export function testedAtOf(test: ThoughtTest | undefined): number | undefined {
+  return test?.status === 'done' ? test.testedAt : undefined
+}
 
 /** A thought record as stored, in the current layout. */
 export function currentThought(id: number, extra: object = {}): object {

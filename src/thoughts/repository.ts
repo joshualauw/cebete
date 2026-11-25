@@ -92,12 +92,42 @@ export async function saveThoughtChallenge(
       )
     }
 
-    const updated: ThoughtRecord = { ...existing, challenge: checked }
+    // Every save is the latest version of the challenge, so it is dated now.
+    const updated: ThoughtRecord = {
+      ...existing,
+      challenge: { ...checked, challengedAt: Date.now() },
+    }
 
     await db.thoughtRecords.put(updated)
 
     return updated
   })
+}
+
+/**
+ * Dates a test as it is saved. A planned test has no date. A result is dated now when it is
+ * logged for the first time or when its result or belief changes. Changing only the plan of a
+ * logged test keeps the date of its result, since the result did not change.
+ */
+function dateTest(checked: ThoughtTest, previous: ThoughtTest | undefined): ThoughtTest {
+  if (checked.status === 'planned') {
+    return checked
+  }
+
+  const { status, plan, prediction, result, belief } = checked
+
+  if (previous?.status === 'done' && previous.result === result && previous.belief === belief) {
+    return {
+      status,
+      plan,
+      prediction,
+      result,
+      belief,
+      ...(previous.testedAt !== undefined && { testedAt: previous.testedAt }),
+    }
+  }
+
+  return { status, plan, prediction, result, belief, testedAt: Date.now() }
 }
 
 /**
@@ -115,7 +145,7 @@ export async function saveThoughtTest(id: number, test: ThoughtTest): Promise<Th
       throw new ThoughtRecordNotFoundError()
     }
 
-    const updated: ThoughtRecord = { ...existing, test: checked }
+    const updated: ThoughtRecord = { ...existing, test: dateTest(checked, existing.test) }
 
     await db.thoughtRecords.put(updated)
 

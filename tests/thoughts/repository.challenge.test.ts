@@ -42,8 +42,10 @@ describe('saveThoughtChallenge', () => {
 
     const saved = await saveThoughtChallenge(id, challenge)
 
-    expect(saved).toEqual({ ...before, challenge })
-    expect(await db.thoughtRecords.get(id)).toEqual({ ...before, challenge })
+    const dated = { ...challenge, challengedAt: NOW }
+
+    expect(saved).toEqual({ ...before, challenge: dated })
+    expect(await db.thoughtRecords.get(id)).toEqual({ ...before, challenge: dated })
   })
 
   it('replaces the challenge on a revision', async () => {
@@ -158,6 +160,7 @@ describe('editing a record that has a challenge', () => {
         { emotion: 'anxious', intensity: 4 },
         { emotion: 'sad', intensity: 1 },
       ],
+      challengedAt: NOW,
     })
   })
 
@@ -206,7 +209,7 @@ describe('reading and deleting challenged records', () => {
 
     await saveThoughtChallenge(id, challenge)
 
-    expect((await listThoughtRecords())[0]?.challenge).toEqual(challenge)
+    expect((await listThoughtRecords())[0]?.challenge).toEqual({ ...challenge, challengedAt: NOW })
   })
 
   it('leaves out a record whose challenge is damaged, without deleting it', async () => {

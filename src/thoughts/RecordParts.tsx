@@ -1,7 +1,8 @@
-import { Box, Flex, Stack, Text, VisuallyHidden } from '@chakra-ui/react'
+import { Box, chakra, Flex, Stack, Text, VisuallyHidden } from '@chakra-ui/react'
 import type { ReactElement } from 'react'
 
 import { emotionLabel } from '@/mood/emotions'
+import { formatEntryDate } from '@/mood/format'
 import { INTENSITY_MAX } from '@/mood/types'
 
 import { BELIEF_MAX, type ThoughtChallenge, type ThoughtRecord } from './types'
@@ -49,6 +50,21 @@ export function Change({ label, before, now, max }: ChangeProps): ReactElement {
   )
 }
 
+type DatedLineProps = {
+  label: string
+  /** When it was done, in milliseconds since 1970. */
+  at: number
+}
+
+/** When a challenge or a test was done, for example "Challenged on 25 Nov 2026". */
+export function DatedLine({ label, at }: DatedLineProps): ReactElement {
+  return (
+    <Text fontSize="sm" color="fg.muted">
+      {label} <chakra.time dateTime={new Date(at).toISOString()}>{formatEntryDate(at)}</chakra.time>
+    </Text>
+  )
+}
+
 type ChallengeDetailsProps = {
   record: ThoughtRecord
   challenge: ThoughtChallenge
@@ -58,6 +74,9 @@ type ChallengeDetailsProps = {
 export function ChallengeDetails({ record, challenge }: ChallengeDetailsProps): ReactElement {
   return (
     <>
+      {challenge.challengedAt === undefined ? null : (
+        <DatedLine label="Challenged on" at={challenge.challengedAt} />
+      )}
       {challenge.evidenceFor ? (
         <Part label="What speaks for it">{challenge.evidenceFor}</Part>
       ) : null}

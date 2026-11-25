@@ -290,7 +290,9 @@ describe('saving a challenge', () => {
     await openChallenge()
     await completeChallenge()
 
-    expect(await db.thoughtRecords.get(firstId)).toEqual({
+    const after = await db.thoughtRecords.get(firstId)
+
+    expect(after).toEqual({
       ...before,
       challenge: {
         evidenceFor: 'I stumbled once',
@@ -301,8 +303,10 @@ describe('saving a challenge', () => {
           { emotion: 'anxious', intensity: 3 },
           { emotion: 'sad', intensity: 2 },
         ],
+        challengedAt: after?.challenge?.challengedAt,
       },
     })
+    expect(after?.challenge?.challengedAt).toBeTypeOf('number')
     expect(await db.thoughtRecords.count()).toBe(2)
   })
 
@@ -338,6 +342,7 @@ describe('saving a challenge', () => {
         { emotion: 'anxious', intensity: 8 },
         { emotion: 'sad', intensity: 5 },
       ],
+      challengedAt: stored?.challengedAt,
     })
   })
 

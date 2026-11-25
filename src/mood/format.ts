@@ -14,9 +14,16 @@ export function joinEmotionLabels(ratings: readonly EmotionRating[]): string {
   return labels.length > 1 ? `${labels.slice(0, -1).join(', ')} and ${last}` : last
 }
 
+const entryDateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' })
+
 /** When an entry was recorded, in the user's own language and time zone. */
 export function formatEntryTime(timestamp: number): string {
   return entryTimeFormat.format(timestamp)
+}
+
+/** The day something happened, without the time, in the user's own language and time zone. */
+export function formatEntryDate(timestamp: number): string {
+  return entryDateFormat.format(timestamp)
 }
 
 function pad(value: number): string {

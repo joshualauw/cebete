@@ -7,7 +7,7 @@ import { formatEntryTime } from '@/mood/format'
 import { INTENSITY_MAX } from '@/mood/types'
 
 import { bodyAreaLabel } from './body'
-import { Change, ChallengeDetails, Part } from './RecordParts'
+import { ChallengeDetails, Change, DatedLine, Part } from './RecordParts'
 import { BELIEF_MAX, type ThoughtRecord } from './types'
 
 type CardProps = {
@@ -283,6 +283,9 @@ export function TestSection({
           <Part label="What you predict">{test.prediction}</Part>
           {test.status === 'done' ? (
             <>
+              {test.testedAt === undefined ? null : (
+                <DatedLine label="Tested on" at={test.testedAt} />
+              )}
               <Part label="What happened">{test.result}</Part>
               <Stack gap="1">
                 <Text fontSize="sm" color="fg.muted">

@@ -5,7 +5,7 @@ import { db } from '@/db/db'
 import { addThoughtRecord, saveThoughtChallenge, saveThoughtTest } from '@/thoughts/repository'
 import type { ThoughtTest } from '@/thoughts/types'
 import { openRecordScreen } from '@tests/helpers/recordScreen'
-import { newThought } from '@tests/helpers/thoughts'
+import { newThought, testedAtOf } from '@tests/helpers/thoughts'
 
 const HAPPENED = new Date(2020, 0, 1, 9, 0).getTime()
 
@@ -175,10 +175,13 @@ describe('saving a result', () => {
     await openLog()
     await saveResult()
 
-    expect(await db.thoughtRecords.get(id)).toEqual({
+    const after = await db.thoughtRecords.get(id)
+
+    expect(after).toEqual({
       ...before,
-      test: { ...done },
+      test: { ...done, testedAt: testedAtOf(after?.test) },
     })
+    expect(testedAtOf(after?.test)).toBeTypeOf('number')
     expect(await db.thoughtRecords.count()).toBe(1)
   })
 
@@ -320,14 +323,21 @@ describe('revising a logged test', () => {
     expect(part.queryByText('Both of them answered')).not.toBeInTheDocument()
     expect(part.getByText('From 9 to 6 out of 10')).toBeInTheDocument()
     expect(await screen.findByText('Result updated.')).toBeInTheDocument()
-    expect((await db.thoughtRecords.get(id))?.test).toEqual({
+
+    const stored = (await db.thoughtRecords.get(id))?.test
+
+    expect(stored).toEqual({
       ...done,
       result: 'Only one of them answered',
       belief: 6,
+      testedAt: testedAtOf(stored),
     })
   })
 
   it('keeps the result and the belief when only the plan is revised', async () => {
+    const seededAt = testedAtOf((await db.thoughtRecords.get(id))?.test)
+
+    expect(seededAt).toBeTypeOf('number')
     await openRecordScreen(id)
     fireEvent.click(within(testPart()).getByRole('button', { name: 'Revise the plan' }))
     type(PLAN_LABEL, 'Say hello to three people')
@@ -340,12 +350,15 @@ describe('revising a logged test', () => {
     expect((await db.thoughtRecords.get(id))?.test).toEqual({
       ...done,
       plan: 'Say hello to three people',
+      testedAt: seededAt,
     })
     expect(within(testPart()).getByText('Say hello to three people')).toBeInTheDocument()
     expect(within(testPart()).getByText('Both of them answered')).toBeInTheDocument()
   })
 
   it('asks before discarding when only the belief was moved', async () => {
+    const seededAt = testedAtOf((await db.thoughtRecords.get(id))?.test)
+
     await openRecordScreen(id)
     fireEvent.click(within(testPart()).getByRole('button', { name: 'Revise the result' }))
     step(2)
@@ -357,7 +370,7 @@ describe('revising a logged test', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Yes, discard' }))
     await resultClosed()
 
-    expect((await db.thoughtRecords.get(id))?.test).toEqual(done)
+    expect((await db.thoughtRecords.get(id))?.test).toEqual({ ...done, testedAt: seededAt })
   })
 
   it('keeps the old result when the revision is cancelled', async () => {

@@ -12,6 +12,8 @@ export type InvalidThoughtRecordField =
   | 'plan'
   | 'prediction'
   | 'result'
+  | 'challengedAt'
+  | 'testedAt'
   | 'body'
 
 /** Thrown when a thought record breaks a rule. Nothing is saved when this happens. */

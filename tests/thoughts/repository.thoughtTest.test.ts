@@ -23,8 +23,14 @@ const planned: ThoughtTest = {
 
 const done: ThoughtTest = { ...planned, status: 'done', result: 'Both answered', belief: 3 }
 
+const NOW = 10_000_000
+
+/** A logged test as stored: the result carries the moment it was logged. */
+const datedDone: ThoughtTest = { ...done, testedAt: NOW }
+
 beforeEach(async () => {
   await db.thoughtRecords.clear()
+  vi.spyOn(Date, 'now').mockReturnValue(NOW)
 })
 
 afterEach(() => {
@@ -52,12 +58,12 @@ describe('saveThoughtTest', () => {
     await saveThoughtTest(saved.id, planned)
     await saveThoughtTest(saved.id, done)
 
-    expect((await db.thoughtRecords.get(saved.id))?.test).toEqual(done)
+    expect((await db.thoughtRecords.get(saved.id))?.test).toEqual(datedDone)
 
     await saveThoughtTest(saved.id, { ...done, result: 'Only one answered', belief: 5 })
 
     expect((await db.thoughtRecords.get(saved.id))?.test).toEqual({
-      ...done,
+      ...datedDone,
       result: 'Only one answered',
       belief: 5,
     })
@@ -132,7 +138,7 @@ describe('updateThoughtRecord and the test', () => {
     const row = await db.thoughtRecords.get(saved.id)
 
     expect(row?.thought).toBe('A different thought')
-    expect(row?.test).toEqual(done)
+    expect(row?.test).toEqual(datedDone)
   })
 
   it('does not add a test to a record that has none', async () => {
@@ -189,7 +195,7 @@ describe('removeThoughtPlan', () => {
     await saveThoughtTest(saved.id, done)
 
     await expect(removeThoughtPlan(saved.id)).rejects.toBeInstanceOf(InvalidThoughtRecordError)
-    expect((await db.thoughtRecords.get(saved.id))?.test).toEqual(done)
+    expect((await db.thoughtRecords.get(saved.id))?.test).toEqual(datedDone)
   })
 
   it('does nothing to a record that has no test', async () => {

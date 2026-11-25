@@ -37,6 +37,8 @@ export type ThoughtChallenge = {
   readonly belief: number
   /** The record's own emotions, re-rated, in the same order as in the record. */
   readonly emotions: readonly EmotionRating[]
+  /** When this version of the challenge was saved. Challenges saved before dates existed have none. */
+  readonly challengedAt?: number
 }
 
 /**
@@ -59,6 +61,8 @@ export type ThoughtTest =
       readonly result: string
       /** How strongly the original thought is believed after the test. */
       readonly belief: number
+      /** When the result was logged. Results logged before dates existed have none. */
+      readonly testedAt?: number
     }
 
 export type ThoughtRecord = NewThoughtRecord & {

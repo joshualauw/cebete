@@ -258,7 +258,9 @@ describe('the record screen: challenging', () => {
     await openChallenge()
     await saveChallenge()
 
-    expect(await db.thoughtRecords.get(id)).toEqual({
+    const after = await db.thoughtRecords.get(id)
+
+    expect(after).toEqual({
       ...before,
       challenge: {
         evidenceFor: 'I stumbled once',
@@ -269,8 +271,10 @@ describe('the record screen: challenging', () => {
           { emotion: 'anxious', intensity: 3 },
           { emotion: 'sad', intensity: 2 },
         ],
+        challengedAt: after?.challenge?.challengedAt,
       },
     })
+    expect(after?.challenge?.challengedAt).toBeTypeOf('number')
     expect(await db.thoughtRecords.count()).toBe(1)
   })
 
