@@ -1,5 +1,7 @@
 import type { EmotionRating } from '@/mood/types'
 
+import type { BodyNote } from './body'
+
 export const BELIEF_MIN = 0
 export const BELIEF_MAX = 10
 export const BELIEF_DEFAULT = 5
@@ -37,10 +39,36 @@ export type ThoughtChallenge = {
   readonly emotions: readonly EmotionRating[]
 }
 
+/**
+ * Testing a thought in real life. It is planned first, then done once the result is logged, so
+ * a half-filled test cannot exist.
+ */
+export type ThoughtTest =
+  | {
+      readonly status: 'planned'
+      /** How and when the thought will be tested. */
+      readonly plan: string
+      /** What would happen if the thought were true. */
+      readonly prediction: string
+    }
+  | {
+      readonly status: 'done'
+      readonly plan: string
+      readonly prediction: string
+      /** What happened when it was tested. */
+      readonly result: string
+      /** How strongly the original thought is believed after the test. */
+      readonly belief: number
+    }
+
 export type ThoughtRecord = NewThoughtRecord & {
   readonly id: number
   /** When it happened, in milliseconds since 1970. */
   readonly createdAt: number
   /** Present once the thought has been challenged. */
   readonly challenge?: ThoughtChallenge
+  /** Present once a test of the thought has been planned. */
+  readonly test?: ThoughtTest
+  /** Where the body reacts to the thought. Absent when there are no notes. */
+  readonly body?: readonly BodyNote[]
 }

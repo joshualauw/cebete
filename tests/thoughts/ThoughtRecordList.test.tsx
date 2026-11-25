@@ -1,10 +1,18 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import type { ReactElement } from 'react'
+import { useLocation, useNavigate } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import App from '@/App'
 import { db } from '@/db/db'
 import { formatEntryTime } from '@/mood/format'
 import ThoughtsScreen from '@/screens/ThoughtsScreen'
-import { addThoughtRecord, listThoughtRecords } from '@/thoughts/repository'
+import {
+  addThoughtRecord,
+  saveThoughtBody,
+  saveThoughtChallenge,
+  saveThoughtTest,
+} from '@/thoughts/repository'
 import type { NewThoughtRecord } from '@/thoughts/types'
 import { renderWithProviders } from '@tests/helpers/render'
 import { newThought } from '@tests/helpers/thoughts'
@@ -26,6 +34,45 @@ afterEach(() => {
 
 function cards(): HTMLElement[] {
   return screen.getAllByRole('listitem')
+}
+
+/** Goes back one step in history, as the browser's back button does. */
+function BrowserBack(): ReactElement {
+  const navigate = useNavigate()
+
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        void navigate(-1)
+      }}
+    >
+      Browser back
+    </button>
+  )
+}
+
+/** Shows where the app is and what the history entry carries. */
+function Where(): ReactElement {
+  const location = useLocation()
+  const state: unknown = location.state
+
+  return (
+    <p data-testid="where">
+      {location.pathname} {JSON.stringify(state)}
+    </p>
+  )
+}
+
+function renderApp(): void {
+  renderWithProviders(
+    <>
+      <App />
+      <BrowserBack />
+      <Where />
+    </>,
+    '/thoughts',
+  )
 }
 
 describe('ThoughtsScreen', () => {
@@ -54,13 +101,24 @@ describe('ThoughtsScreen', () => {
 })
 
 describe('ThoughtRecordList: a card', () => {
-  it('shows the situation, the thought, the feelings with ratings, the belief and the time', async () => {
+  it('shows the situation, the thought and the time, and no belief rating', async () => {
+    await addAt(FIRST, newThought({ situation: 'Team meeting', thought: 'I will fail', belief: 8 }))
+    renderWithProviders(<ThoughtsScreen />)
+
+    const card = await screen.findByRole('listitem')
+    const view = within(card)
+
+    expect(view.getByText('Team meeting')).toBeInTheDocument()
+    expect(view.getByText('I will fail')).toBeInTheDocument()
+    expect(view.getByText(formatEntryTime(FIRST))).toBeInTheDocument()
+    expect(view.queryByText('Belief in the thought')).not.toBeInTheDocument()
+    expect(card).not.toHaveTextContent('8/10')
+  })
+
+  it('leaves the feelings and every action to the record’s own screen', async () => {
     await addAt(
       FIRST,
       newThought({
-        situation: 'Team meeting',
-        thought: 'I will fail',
-        belief: 8,
         emotions: [
           { emotion: 'anxious', intensity: 7 },
           { emotion: 'sad', intensity: 3 },
@@ -70,16 +128,11 @@ describe('ThoughtRecordList: a card', () => {
     renderWithProviders(<ThoughtsScreen />)
 
     const card = await screen.findByRole('listitem')
-    const view = within(card)
 
-    expect(view.getByText('Team meeting')).toBeInTheDocument()
-    expect(view.getByText('I will fail')).toBeInTheDocument()
-    expect(view.getByText('Anxious')).toBeInTheDocument()
-    expect(view.getByText('Sad')).toBeInTheDocument()
-    expect(card.textContent).toContain('7/10')
-    expect(card.textContent).toContain('3/10')
-    expect(view.getByText('8/10')).toBeInTheDocument()
-    expect(view.getByText(formatEntryTime(FIRST))).toBeInTheDocument()
+    expect(card).not.toHaveTextContent('Anxious')
+    expect(card).not.toHaveTextContent('Sad')
+    expect(within(card).queryByRole('button')).not.toBeInTheDocument()
+    expect(within(card).getAllByRole('link')).toHaveLength(1)
   })
 
   it('shows no situation line when the record has none', async () => {
@@ -90,6 +143,208 @@ describe('ThoughtRecordList: a card', () => {
 
     expect(card.textContent).toContain('only a thought')
     expect(card.querySelectorAll('p')[0]).toHaveTextContent('only a thought')
+  })
+
+  it('shows no completed part, and no checkmark, on a thought that has not been challenged', async () => {
+    await addAt(FIRST)
+    renderWithProviders(<ThoughtsScreen />)
+
+    const card = await screen.findByRole('listitem')
+
+    expect(screen.queryByText('Challenged')).not.toBeInTheDocument()
+    expect(card.querySelector('svg')).toBeNull()
+  })
+
+  it('shows Challenged with a checkmark on its left, and no belief rating, on a challenged thought', async () => {
+    const id = await addAt(FIRST, newThought({ belief: 9 }))
+    await saveThoughtChallenge(id, {
+      balanced: 'I can cope',
+      belief: 4,
+      emotions: [{ emotion: 'anxious', intensity: 3 }],
+    })
+    renderWithProviders(<ThoughtsScreen />)
+
+    const card = await screen.findByRole('listitem')
+    const label = within(card).getByText('Challenged')
+    const line = label.parentElement
+    const icon = line?.querySelector('svg')
+
+    expect(icon).not.toBeNull()
+    expect(icon).toHaveAttribute('aria-hidden', 'true')
+    expect(line?.firstElementChild).toBe(icon)
+    expect(card).not.toHaveTextContent('→')
+    expect(card).not.toHaveTextContent('Belief in the thought')
+    expect(within(card).queryByText(/out of 10/)).not.toBeInTheDocument()
+  })
+
+  it('keeps the card one link, named after the thought and the time, with the label in it', async () => {
+    const id = await addAt(FIRST, newThought({ thought: 'I will fail' }))
+    await saveThoughtChallenge(id, {
+      balanced: 'I can cope',
+      belief: 4,
+      emotions: [{ emotion: 'anxious', intensity: 3 }],
+    })
+    renderWithProviders(<ThoughtsScreen />)
+
+    const link = await screen.findByRole('link', { name: /I will fail/ })
+
+    expect(link).toHaveAccessibleName(new RegExp(formatEntryTime(FIRST)))
+    expect(link).toHaveAccessibleName(/Challenged/)
+  })
+
+  describe('with a test', () => {
+    const plannedTest = {
+      status: 'planned',
+      plan: 'Say hello to two people',
+      prediction: 'Nobody will answer',
+    } as const
+    const doneTest = { ...plannedTest, status: 'done', result: 'Both answered', belief: 3 } as const
+
+    it('shows nothing new for a planned test', async () => {
+      const id = await addAt(FIRST)
+
+      await saveThoughtTest(id, plannedTest)
+      renderWithProviders(<ThoughtsScreen />)
+
+      const card = await screen.findByRole('listitem')
+
+      expect(card).not.toHaveTextContent('Tested')
+      expect(card).not.toHaveTextContent('planned')
+      expect(card.querySelector('svg')).toBeNull()
+    })
+
+    it('shows Tested with a decorative checkmark on its left, and no belief, once the result is logged', async () => {
+      const id = await addAt(FIRST, newThought({ belief: 9 }))
+
+      await saveThoughtTest(id, doneTest)
+      renderWithProviders(<ThoughtsScreen />)
+
+      const card = await screen.findByRole('listitem')
+      const label = within(card).getByText('Tested')
+      const icon = label.parentElement?.querySelector('svg')
+
+      expect(icon).not.toBeNull()
+      expect(icon).toHaveAttribute('aria-hidden', 'true')
+      expect(label.parentElement?.firstElementChild).toBe(icon)
+      expect(card).not.toHaveTextContent('→')
+      expect(card).not.toHaveTextContent('Belief in the thought')
+      expect(within(card).queryByText('Challenged')).not.toBeInTheDocument()
+    })
+
+    it('shows both lines, Challenged first, for a record that is challenged and tested', async () => {
+      const id = await addAt(FIRST)
+
+      await saveThoughtChallenge(id, {
+        balanced: 'I can cope',
+        belief: 4,
+        emotions: [{ emotion: 'anxious', intensity: 3 }],
+      })
+      await saveThoughtTest(id, doneTest)
+      renderWithProviders(<ThoughtsScreen />)
+
+      const card = await screen.findByRole('listitem')
+      const challenged = within(card).getByText('Challenged')
+      const tested = within(card).getByText('Tested')
+
+      expect(card.querySelectorAll('svg')).toHaveLength(2)
+      expect(
+        challenged.compareDocumentPosition(tested) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy()
+    })
+
+    it('keeps the card one link, and its name includes Tested', async () => {
+      const id = await addAt(FIRST, newThought({ thought: 'I will fail' }))
+
+      await saveThoughtTest(id, doneTest)
+      renderWithProviders(<ThoughtsScreen />)
+
+      const link = await screen.findByRole('link', { name: /I will fail/ })
+
+      expect(link).toHaveAccessibleName(/Tested/)
+    })
+  })
+
+  describe('with body notes', () => {
+    it('shows Body noted with a decorative checkmark on its left, and no other detail', async () => {
+      const id = await addAt(FIRST)
+
+      await saveThoughtBody(id, [{ area: 'chest', description: 'tight' }, { area: 'stomach' }])
+      renderWithProviders(<ThoughtsScreen />)
+
+      const card = await screen.findByRole('listitem')
+      const label = within(card).getByText('Body noted')
+      const icon = label.parentElement?.querySelector('svg')
+
+      expect(icon).not.toBeNull()
+      expect(icon).toHaveAttribute('aria-hidden', 'true')
+      expect(label.parentElement?.firstElementChild).toBe(icon)
+      expect(card).not.toHaveTextContent('Chest')
+      expect(card).not.toHaveTextContent('tight')
+      expect(card).not.toHaveTextContent('Stomach')
+    })
+
+    it('shows nothing for a record with no notes', async () => {
+      await addAt(FIRST)
+      renderWithProviders(<ThoughtsScreen />)
+
+      const card = await screen.findByRole('listitem')
+
+      expect(card).not.toHaveTextContent('Body noted')
+      expect(card.querySelector('svg')).toBeNull()
+    })
+
+    it('shows nothing once every note has been cleared', async () => {
+      const id = await addAt(FIRST)
+
+      await saveThoughtBody(id, [{ area: 'chest' }])
+      await saveThoughtBody(id, [])
+      renderWithProviders(<ThoughtsScreen />)
+
+      const card = await screen.findByRole('listitem')
+
+      expect(card).not.toHaveTextContent('Body noted')
+    })
+
+    it('shows all three lines, in order, for a challenged, tested and noted record', async () => {
+      const id = await addAt(FIRST)
+
+      await saveThoughtChallenge(id, {
+        balanced: 'I can cope',
+        belief: 4,
+        emotions: [{ emotion: 'anxious', intensity: 3 }],
+      })
+      await saveThoughtTest(id, {
+        status: 'done',
+        plan: 'a plan',
+        prediction: 'a guess',
+        result: 'it went fine',
+        belief: 3,
+      })
+      await saveThoughtBody(id, [{ area: 'head' }])
+      renderWithProviders(<ThoughtsScreen />)
+
+      const card = await screen.findByRole('listitem')
+      const challenged = within(card).getByText('Challenged')
+      const tested = within(card).getByText('Tested')
+      const noted = within(card).getByText('Body noted')
+
+      expect(card.querySelectorAll('svg')).toHaveLength(3)
+      expect(
+        challenged.compareDocumentPosition(tested) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy()
+      expect(tested.compareDocumentPosition(noted) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    })
+
+    it('keeps the card one link, and its name includes Body noted', async () => {
+      const id = await addAt(FIRST, newThought({ thought: 'I will fail' }))
+
+      await saveThoughtBody(id, [{ area: 'chest' }])
+      renderWithProviders(<ThoughtsScreen />)
+
+      const link = await screen.findByRole('link', { name: /I will fail/ })
+
+      expect(link).toHaveAccessibleName(/Body noted/)
+    })
   })
 
   it('lists the records newest first', async () => {
@@ -113,59 +368,102 @@ describe('ThoughtRecordList: a card', () => {
   })
 })
 
-describe('ThoughtRecordList: deleting', () => {
-  it('asks first, and Keep leaves the record untouched', async () => {
-    await addAt(FIRST, newThought({ thought: 'keep me' }))
-    renderWithProviders(<ThoughtsScreen />)
-    fireEvent.click(await screen.findByRole('button', { name: /^Delete the thought record/ }))
+describe('ThoughtRecordList: opening a record', () => {
+  it('makes the whole card one link to the record, named after the thought and the time', async () => {
+    const id = await addAt(FIRST, newThought({ thought: 'I will fail' }))
+    renderApp()
 
-    expect(screen.getByText('Delete this record? This cannot be undone.')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Keep' })).toHaveFocus()
+    const link = await screen.findByRole('link', { name: /I will fail/ })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Keep' }))
+    expect(link).toHaveAttribute('href', `/thoughts/${String(id)}`)
+    expect(link).toHaveAccessibleName(new RegExp(formatEntryTime(FIRST)))
+    expect(link.closest('li')).toContainElement(link)
+  })
 
-    expect(screen.queryByText(/cannot be undone/i)).not.toBeInTheDocument()
-    expect(await listThoughtRecords()).toHaveLength(1)
+  it('opens the record on its own screen when the card is tapped', async () => {
+    const id = await addAt(FIRST, newThought({ thought: 'I will fail' }))
+    renderApp()
+
+    fireEvent.click(await screen.findByRole('link', { name: /I will fail/ }))
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Thought record' })).toBeVisible()
+    expect(screen.getByTestId('where')).toHaveTextContent(`/thoughts/${String(id)}`)
+    expect(
+      within(screen.getByRole('region', { name: 'The thought' })).getByText('I will fail'),
+    ).toBeInTheDocument()
+  })
+
+  it('returns focus to the card when the user comes back with Back to thoughts', async () => {
+    await addAt(FIRST, newThought({ thought: 'older one' }))
+    await addAt(SECOND, newThought({ thought: 'newer one' }))
+    renderApp()
+
+    fireEvent.click(await screen.findByRole('link', { name: /older one/ }))
+    fireEvent.click(await screen.findByRole('link', { name: 'Back to thoughts' }))
+
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /^Delete the thought record/ })).toHaveFocus()
+      expect(screen.getByRole('link', { name: /older one/ })).toHaveFocus()
     })
   })
 
-  it('removes the record when confirmed, and announces it', async () => {
-    await addAt(FIRST, newThought({ thought: 'remove me' }))
-    await addAt(SECOND, newThought({ thought: 'stay here' }))
-    renderWithProviders(<ThoughtsScreen />)
-    await screen.findAllByRole('listitem')
+  it('returns focus to the card when the user comes back with the browser’s back button', async () => {
+    await addAt(FIRST, newThought({ thought: 'older one' }))
+    await addAt(SECOND, newThought({ thought: 'newer one' }))
+    renderApp()
 
-    fireEvent.click(screen.getByRole('button', { name: /^Delete the thought record “remove me”/ }))
-    fireEvent.click(screen.getByRole('button', { name: 'Yes, delete' }))
+    fireEvent.click(await screen.findByRole('link', { name: /older one/ }))
+    await screen.findByRole('heading', { level: 1, name: 'Thought record' })
+    fireEvent.click(screen.getByRole('button', { name: 'Browser back' }))
 
     await waitFor(() => {
-      expect(screen.queryByText('remove me')).not.toBeInTheDocument()
+      expect(screen.getByRole('link', { name: /older one/ })).toHaveFocus()
     })
-    expect(screen.getByText('stay here')).toBeInTheDocument()
-    expect(screen.getByText('Record deleted. 1 record left.')).toBeInTheDocument()
-    expect(await db.thoughtRecords.count()).toBe(1)
   })
 
-  it('says when the last record is gone', async () => {
-    await addAt(FIRST)
-    renderWithProviders(<ThoughtsScreen />)
+  it('clears the note about which record was opened, so a reload does not move focus again', async () => {
+    await addAt(FIRST, newThought({ thought: 'older one' }))
+    renderApp()
 
-    fireEvent.click(await screen.findByRole('button', { name: /^Delete the thought record/ }))
-    fireEvent.click(screen.getByRole('button', { name: 'Yes, delete' }))
+    fireEvent.click(await screen.findByRole('link', { name: /older one/ }))
+    fireEvent.click(await screen.findByRole('link', { name: 'Back to thoughts' }))
+    await screen.findByRole('link', { name: /older one/ })
 
-    expect(await screen.findByText('Record deleted. No records left.')).toBeInTheDocument()
-    expect(await screen.findByText(/no thought records yet/i)).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByTestId('where')).toHaveTextContent(/^\/thoughts null$/)
+    })
   })
 
-  it('names each Delete action after a short form of its record', async () => {
-    await addAt(FIRST, newThought({ thought: 'a'.repeat(100) }))
-    renderWithProviders(<ThoughtsScreen />)
+  it('does not move focus when the list is opened any other way', async () => {
+    await addAt(FIRST, newThought({ thought: 'older one' }))
+    renderApp()
 
-    const button = await screen.findByRole('button', { name: /^Delete the thought record/ })
+    const link = await screen.findByRole('link', { name: /older one/ })
 
-    expect(button.getAttribute('aria-label')).toContain('…')
-    expect(button.getAttribute('aria-label')?.length).toBeLessThan(120)
+    expect(link).not.toHaveFocus()
+  })
+})
+
+describe('ThoughtRecordList: while a new record is being captured', () => {
+  it('makes the cards inert, so typed work is never lost by a stray tap, and wakes them again after', async () => {
+    await addAt(FIRST, newThought({ thought: 'I will fail' }))
+    renderApp()
+
+    const link = await screen.findByRole('link', { name: /I will fail/ })
+
+    fireEvent.click(screen.getByRole('button', { name: 'New thought record' }))
+
+    expect(link).toHaveAttribute('aria-disabled', 'true')
+
+    fireEvent.click(link)
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Thoughts' })).toBeInTheDocument()
+    expect(screen.getByTestId('where')).toHaveTextContent(/^\/thoughts/)
+    expect(screen.queryByRole('heading', { name: 'Thought record' })).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: /I will fail/ })).not.toHaveAttribute('aria-disabled')
+    })
   })
 })

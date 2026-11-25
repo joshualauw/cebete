@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '@/db/db'
 import ThoughtsScreen from '@/screens/ThoughtsScreen'
 import { addThoughtRecord, deleteThoughtRecord } from '@/thoughts/repository'
+import { openRecordScreen } from '@tests/helpers/recordScreen'
 import { renderWithProviders } from '@tests/helpers/render'
 import { newThought } from '@tests/helpers/thoughts'
 
@@ -38,6 +39,14 @@ function blocked(number: number): boolean {
 function openCapture(): void {
   renderWithProviders(<ThoughtsScreen />)
   fireEvent.click(screen.getByRole('button', { name: 'New thought record' }))
+}
+
+function clickEdit(): void {
+  fireEvent.click(
+    within(screen.getByRole('region', { name: 'The thought' })).getByRole('button', {
+      name: 'Edit',
+    }),
+  )
 }
 
 function advance(): void {
@@ -271,8 +280,8 @@ describe('step markers in an edit', () => {
       createdAt: OLDER,
     })
 
-    renderWithProviders(<ThoughtsScreen />)
-    fireEvent.click(await screen.findByRole('button', { name: /^Edit the thought record/ }))
+    await openRecordScreen(saved.id)
+    clickEdit()
 
     return saved.id
   }
@@ -334,8 +343,8 @@ describe('step markers: when they are hidden', () => {
   it('hides them when the record being edited no longer exists', async () => {
     const saved = await addThoughtRecord({ ...newThought(), createdAt: 1_000 })
 
-    renderWithProviders(<ThoughtsScreen />)
-    fireEvent.click(await screen.findByRole('button', { name: /^Edit the thought record/ }))
+    await openRecordScreen(saved.id)
+    clickEdit()
     fireEvent.click(marker(6))
     await deleteThoughtRecord(saved.id)
 

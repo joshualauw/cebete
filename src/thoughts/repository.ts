@@ -1,5 +1,6 @@
 import { db } from '@/db/db'
 
+import type { BodyNote } from './body'
 import { reconcileChallenge, sameEmotions } from './challenge'
 import { InvalidThoughtRecordError, ThoughtRecordNotFoundError } from './errors'
 import type {
@@ -7,11 +8,14 @@ import type {
   ThoughtChallenge,
   ThoughtRecord,
   ThoughtRecordChanges,
+  ThoughtTest,
 } from './types'
 import {
   isThoughtRecord,
   validateChallenge,
+  validateBody,
   validateNewThoughtRecord,
+  validateTest,
   validateThoughtRecordChanges,
   validateThoughtRecordTime,
 } from './validation'
@@ -53,6 +57,8 @@ export async function updateThoughtRecord(
       ...(existing.challenge && {
         challenge: reconcileChallenge(existing.challenge, record.emotions),
       }),
+      ...(existing.test && { test: existing.test }),
+      ...(existing.body && { body: existing.body }),
     }
 
     await db.thoughtRecords.put(updated)
@@ -94,6 +100,75 @@ export async function saveThoughtChallenge(
   })
 }
 
+/**
+ * Saves the test of a record, whether it is the first plan, a revised plan, the result or a
+ * revised result, and changes nothing else in the record. A record that is gone is never
+ * recreated.
+ */
+export async function saveThoughtTest(id: number, test: ThoughtTest): Promise<ThoughtRecord> {
+  const checked = validateTest(test)
+
+  return db.transaction('rw', db.thoughtRecords, async () => {
+    const existing = await db.thoughtRecords.get(id)
+
+    if (existing === undefined) {
+      throw new ThoughtRecordNotFoundError()
+    }
+
+    const updated: ThoughtRecord = { ...existing, test: checked }
+
+    await db.thoughtRecords.put(updated)
+
+    return updated
+  })
+}
+
+/**
+ * Drops a test that is only planned, so the record is as if it had never been planned. A test
+ * whose result is logged cannot be removed, only revised. A record that is gone is never
+ * recreated.
+ */
+export async function removeThoughtPlan(id: number): Promise<void> {
+  await db.transaction('rw', db.thoughtRecords, async () => {
+    const existing = await db.thoughtRecords.get(id)
+
+    if (existing === undefined) {
+      throw new ThoughtRecordNotFoundError()
+    }
+
+    if (existing.test?.status === 'done') {
+      throw new InvalidThoughtRecordError('record', 'A test with a result cannot be removed.')
+    }
+
+    // Dexie deletes a property that is updated to undefined.
+    await db.thoughtRecords.update(id, { test: undefined })
+  })
+}
+
+/**
+ * Saves the body notes of a record, replacing the ones it has, and changes nothing else in it.
+ * An empty list removes them, so a record with no notes has no body property at all. A record
+ * that is gone is never recreated.
+ */
+export async function saveThoughtBody(id: number, notes: readonly BodyNote[]): Promise<void> {
+  const checked = validateBody(notes)
+
+  await db.transaction('rw', db.thoughtRecords, async () => {
+    const existing = await db.thoughtRecords.get(id)
+
+    if (existing === undefined) {
+      throw new ThoughtRecordNotFoundError()
+    }
+
+    if (checked.length === 0) {
+      // Dexie deletes a property that is updated to undefined.
+      await db.thoughtRecords.update(id, { body: undefined })
+    } else {
+      await db.thoughtRecords.put({ ...existing, body: checked })
+    }
+  })
+}
+
 let lastReportedUnreadable = 0
 
 function reportUnreadable(count: number): void {
@@ -122,6 +197,31 @@ export async function listThoughtRecords(): Promise<ThoughtRecord[]> {
   reportUnreadable(rows.length - records.length)
 
   return records.sort((a, b) => b.createdAt - a.createdAt || b.id - a.id)
+}
+
+const reportedUnreadableIds = new Set<number>()
+
+/**
+ * Reads one thought record, or `undefined` when there is none with that id. A row that cannot be
+ * read as a record counts as missing, is left in place, and is reported once per page load.
+ */
+export async function getThoughtRecord(id: number): Promise<ThoughtRecord | undefined> {
+  const row: unknown = await db.thoughtRecords.get(id)
+
+  if (row === undefined) {
+    return undefined
+  }
+
+  if (!isThoughtRecord(row)) {
+    if (!reportedUnreadableIds.has(id)) {
+      reportedUnreadableIds.add(id)
+      console.warn('A saved thought record could not be read and is not shown')
+    }
+
+    return undefined
+  }
+
+  return row
 }
 
 /** Deletes one thought record. It cannot be undone. Deleting a record that is gone does nothing. */

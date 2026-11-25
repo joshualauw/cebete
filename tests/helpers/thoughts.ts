@@ -22,6 +22,35 @@ export function newThought(extra: Partial<NewThoughtRecord> = {}): NewThoughtRec
   }
 }
 
+/** A planned test as stored. */
+export function currentPlannedTest(extra: object = {}): object {
+  return {
+    status: 'planned',
+    plan: 'Say hello to two people on Monday',
+    prediction: 'Nobody will answer',
+    ...extra,
+  }
+}
+
+/** A test whose result is logged, as stored. */
+export function currentDoneTest(extra: object = {}): object {
+  return {
+    ...currentPlannedTest({ status: 'done' }),
+    result: 'Both of them answered',
+    belief: 3,
+    ...extra,
+  }
+}
+
+/** Body notes as stored, in the order of the body areas. */
+export function currentBody(): object[] {
+  return [
+    { area: 'chest', description: 'tight' },
+    { area: 'stomach' },
+    { area: 'hands', description: 'shaky and cold' },
+  ]
+}
+
 /** A challenge as stored, for the record made by `currentThought` or `newThought`. */
 export function currentChallenge(extra: object = {}): object {
   return {

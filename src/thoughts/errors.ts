@@ -9,6 +9,10 @@ export type InvalidThoughtRecordField =
   | 'evidenceFor'
   | 'evidenceAgainst'
   | 'balanced'
+  | 'plan'
+  | 'prediction'
+  | 'result'
+  | 'body'
 
 /** Thrown when a thought record breaks a rule. Nothing is saved when this happens. */
 export class InvalidThoughtRecordError extends Error {

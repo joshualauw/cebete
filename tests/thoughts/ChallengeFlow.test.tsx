@@ -2,10 +2,10 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { db } from '@/db/db'
-import ThoughtsScreen from '@/screens/ThoughtsScreen'
-import { deleteThoughtRecord, saveThoughtChallenge } from '@/thoughts/repository'
-import { addThoughtRecord } from '@/thoughts/repository'
-import type { ThoughtChallenge } from '@/thoughts/types'
+import ChallengeFlow from '@/thoughts/ChallengeFlow'
+import { addThoughtRecord, saveThoughtChallenge } from '@/thoughts/repository'
+import type { ThoughtRecord } from '@/thoughts/types'
+import { openRecordScreen } from '@tests/helpers/recordScreen'
 import { renderWithProviders } from '@tests/helpers/render'
 import { newThought } from '@tests/helpers/thoughts'
 
@@ -15,6 +15,7 @@ const NEWER = new Date(2020, 0, 2, 9, 0).getTime()
 const BELIEF_LABEL = 'How strongly do you believe the original thought now?'
 
 let firstId = 0
+let secondId = 0
 
 beforeEach(async () => {
   await db.thoughtRecords.clear()
@@ -31,15 +32,21 @@ beforeEach(async () => {
       createdAt: OLDER,
     })
   ).id
-  await addThoughtRecord({ ...newThought({ thought: 'second thought' }), createdAt: NEWER })
+  secondId = (
+    await addThoughtRecord({ ...newThought({ thought: 'second thought' }), createdAt: NEWER })
+  ).id
 })
 
 afterEach(() => {
   vi.restoreAllMocks()
 })
 
-function challengeButton(thought: string): Promise<HTMLElement> {
-  return screen.findByRole('button', { name: new RegExp(`^Challenge this thought: “${thought}`) })
+function challengePart(): HTMLElement {
+  return screen.getByRole('region', { name: 'Challenge' })
+}
+
+function thoughtPart(): HTMLElement {
+  return screen.getByRole('region', { name: 'The thought' })
 }
 
 function flowRegion(): HTMLElement {
@@ -62,9 +69,9 @@ function slider(label: string, value: number): void {
   fireEvent.change(screen.getByLabelText(label), { target: { value: String(value) } })
 }
 
-async function openChallenge(thought = 'I will fail'): Promise<void> {
-  renderWithProviders(<ThoughtsScreen />)
-  fireEvent.click(await challengeButton(thought))
+async function openChallenge(id = firstId): Promise<void> {
+  await openRecordScreen(id)
+  fireEvent.click(within(challengePart()).getByRole('button', { name: 'Challenge this thought' }))
 }
 
 function toBalanced(): void {
@@ -79,17 +86,15 @@ async function closed(): Promise<void> {
 }
 
 describe('the Challenge this thought button', () => {
-  it('shows on a card with no challenge, naming the thought', async () => {
-    renderWithProviders(<ThoughtsScreen />)
+  it('shows on a record with no challenge', async () => {
+    await openRecordScreen(secondId)
 
-    const buttons = await screen.findAllByRole('button', { name: /^Challenge this thought/ })
+    const button = within(challengePart()).getByRole('button', { name: 'Challenge this thought' })
 
-    expect(buttons).toHaveLength(2)
-    expect(buttons[0]).toHaveAccessibleName(/“second thought”/)
-    expect(buttons[0]).toHaveTextContent('Challenge this thought')
+    expect(button).toBeEnabled()
   })
 
-  it('does not show on a card that already has a challenge', async () => {
+  it('is replaced by Revise challenge on a record that already has a challenge', async () => {
     await saveThoughtChallenge(firstId, {
       balanced: 'I can cope',
       belief: 3,
@@ -98,18 +103,17 @@ describe('the Challenge this thought button', () => {
         { emotion: 'sad', intensity: 1 },
       ],
     })
-    renderWithProviders(<ThoughtsScreen />)
-    await screen.findByText('I can cope')
+    await openRecordScreen(firstId)
 
-    expect(screen.getAllByRole('button', { name: /^Challenge this thought/ })).toHaveLength(1)
     expect(
-      screen.queryByRole('button', { name: /^Challenge this thought: “I will fail/ }),
+      within(challengePart()).queryByRole('button', { name: 'Challenge this thought' }),
     ).not.toBeInTheDocument()
+    expect(within(challengePart()).getByRole('button', { name: 'Revise challenge' })).toBeEnabled()
   })
 })
 
 describe('the challenge flow', () => {
-  it('opens in place of nothing else on the card, on the first step, with five step markers', async () => {
+  it('opens in place of the challenge part, on the first step, with five step markers', async () => {
     await openChallenge()
 
     expect(flowRegion()).toBeInTheDocument()
@@ -117,7 +121,8 @@ describe('the challenge flow', () => {
     expect(heading()).toHaveTextContent('What speaks for it')
     expect(heading()).toHaveFocus()
     expect(within(flowRegion()).getAllByRole('listitem')).toHaveLength(5)
-    expect(screen.getByRole('button', { name: /^Challenge this thought: “second/ })).toBeDisabled()
+    expect(screen.queryByRole('region', { name: 'Challenge' })).not.toBeInTheDocument()
+    expect(within(thoughtPart()).getByRole('button', { name: 'Edit' })).toBeDisabled()
   })
 
   it('asks the five questions in order', async () => {
@@ -184,6 +189,60 @@ describe('the challenge flow', () => {
   })
 })
 
+describe('the thought while challenging', () => {
+  it('stays visible as one line on every step, with no toggle for the rest of the record', async () => {
+    await openChallenge()
+
+    for (let step = 0; step < 4; step += 1) {
+      expect(within(flowRegion()).getByText('I will fail')).toBeInTheDocument()
+      expect(
+        screen.queryByRole('button', { name: /whole record|Hide the record/ }),
+      ).not.toBeInTheDocument()
+
+      if (step === 2) {
+        type('What would be a more balanced thought?', 'I can cope')
+      }
+      advance()
+    }
+
+    expect(within(flowRegion()).getByText('I will fail')).toBeInTheDocument()
+  })
+
+  it('is hidden during the discard question, and back after Keep editing', async () => {
+    await openChallenge()
+    type('What speaks for this thought?', 'typed')
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    expect(within(flowRegion()).queryByText('I will fail')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }))
+
+    expect(within(flowRegion()).getByText('I will fail')).toBeInTheDocument()
+  })
+
+  it('is hidden when the record no longer exists', async () => {
+    const missing: ThoughtRecord = {
+      id: 4242,
+      emotions: [{ emotion: 'sad', intensity: 4 }],
+      thought: 'already deleted elsewhere',
+      belief: 6,
+      createdAt: OLDER,
+    }
+
+    renderWithProviders(<ChallengeFlow record={missing} onDone={() => undefined} />)
+    expect(screen.getByText('already deleted elsewhere')).toBeInTheDocument()
+
+    advance()
+    advance()
+    type('What would be a more balanced thought?', 'too late')
+    fireEvent.click(screen.getByRole('button', { name: /^Step 5:/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/no longer exists/i)
+    expect(screen.queryByText('already deleted elsewhere')).not.toBeInTheDocument()
+  })
+})
+
 describe('saving a challenge', () => {
   async function completeChallenge(): Promise<void> {
     type('What speaks for this thought?', 'I stumbled once')
@@ -200,19 +259,29 @@ describe('saving a challenge', () => {
     await closed()
   }
 
-  it('updates the card with the arrow, the Challenged label and the balanced thought', async () => {
+  it('shows the challenge, with the belief before and now, on the record screen', async () => {
     await openChallenge()
     await completeChallenge()
 
-    const card = (await screen.findByText('I can cope')).closest('li')
+    const part = within(challengePart())
+
+    expect(await part.findByText('I can cope')).toBeInTheDocument()
+    expect(part.getByText('From 9 to 4 out of 10')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Challenge this thought' })).not.toBeInTheDocument()
+  })
+
+  it('shows the Challenged label, and no belief, on the list', async () => {
+    await openChallenge()
+    await completeChallenge()
+
+    fireEvent.click(screen.getByRole('link', { name: 'Back to thoughts' }))
+
+    const card = (await screen.findByText('Challenged')).closest('li')
 
     expect(card).not.toBeNull()
-    expect(card).toHaveTextContent('Challenged')
-    expect(card).toHaveTextContent('9 → 4')
     expect(card).toHaveTextContent('I will fail')
-    expect(
-      screen.queryByRole('button', { name: /^Challenge this thought: “I will fail/ }),
-    ).not.toBeInTheDocument()
+    expect(card).not.toHaveTextContent('→')
+    expect(card).not.toHaveTextContent('Belief in the thought')
   })
 
   it('stores the challenge on the same record and changes nothing else in it', async () => {
@@ -237,17 +306,19 @@ describe('saving a challenge', () => {
     expect(await db.thoughtRecords.count()).toBe(2)
   })
 
-  it('announces it, and returns focus to the card’s View challenge button, where it stays', async () => {
+  it('announces it, and returns focus to the Revise challenge button, where it stays', async () => {
     await openChallenge()
     await completeChallenge()
 
     expect(await screen.findByText('Challenge saved.')).toBeInTheDocument()
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /^View challenge: “I will fail/ })).toHaveFocus()
+      expect(
+        within(challengePart()).getByRole('button', { name: 'Revise challenge' }),
+      ).toHaveFocus()
     })
     await new Promise((resolve) => setTimeout(resolve, 150))
 
-    expect(screen.getByRole('button', { name: /^View challenge: “I will fail/ })).toHaveFocus()
+    expect(within(challengePart()).getByRole('button', { name: 'Revise challenge' })).toHaveFocus()
   })
 
   it('saves a challenge with only the balanced thought', async () => {
@@ -324,8 +395,8 @@ describe('closing a challenge', () => {
     expect(await db.thoughtRecords.get(firstId)).toEqual(before)
     await waitFor(() => {
       expect(
-        screen.getByRole('button', { name: /^Challenge this thought: “I will fail/ }),
-      ).toBeEnabled()
+        within(challengePart()).getByRole('button', { name: 'Challenge this thought' }),
+      ).toHaveFocus()
     })
   })
 
@@ -358,64 +429,18 @@ describe('closing a challenge', () => {
 })
 
 describe('one flow at a time with the challenge', () => {
-  it('switches New thought record and every other action off while a challenge is open', async () => {
+  it('switches Edit and Delete off while a challenge is open, and back on when it closes', async () => {
     await openChallenge()
 
-    expect(screen.getByRole('button', { name: 'New thought record' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: /^Challenge this thought: “second/ })).toBeDisabled()
-    expect(screen.getByRole('button', { name: /^Edit the thought record “second/ })).toBeDisabled()
+    expect(within(thoughtPart()).getByRole('button', { name: 'Edit' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Delete this record' })).toBeDisabled()
 
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
     await closed()
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'New thought record' })).toBeEnabled()
+      expect(within(thoughtPart()).getByRole('button', { name: 'Edit' })).toBeEnabled()
     })
-    expect(screen.getByRole('button', { name: /^Challenge this thought: “second/ })).toBeEnabled()
-    expect(screen.getByRole('button', { name: /^Edit the thought record “second/ })).toBeEnabled()
-  })
-
-  it('switches every Challenge action off while a new record is being captured', async () => {
-    renderWithProviders(<ThoughtsScreen />)
-    await challengeButton('I will fail')
-    fireEvent.click(screen.getByRole('button', { name: 'New thought record' }))
-
-    for (const button of screen.getAllByRole('button', { name: /^Challenge this thought/ })) {
-      expect(button).toBeDisabled()
-    }
-  })
-
-  it('switches the Challenge actions off while a record is being edited', async () => {
-    renderWithProviders(<ThoughtsScreen />)
-    fireEvent.click(
-      await screen.findByRole('button', { name: /^Edit the thought record “I will fail/ }),
-    )
-
-    for (const button of screen.getAllByRole('button', { name: /^Challenge this thought/ })) {
-      expect(button).toBeDisabled()
-    }
-  })
-})
-
-describe('a record that is gone', () => {
-  it('tells the user, recreates nothing, and closes the challenge when the record is deleted meanwhile', async () => {
-    await openChallenge()
-    await deleteThoughtRecord(firstId)
-
-    expect(await screen.findByText(/was deleted, so nothing was saved/i)).toBeInTheDocument()
-    expect(screen.queryByRole('region', { name: 'Challenge this thought' })).not.toBeInTheDocument()
-    expect(await db.thoughtRecords.count()).toBe(1)
-  })
-
-  it('keeps a challenge saved after the record is gone from being created', async () => {
-    const challenge: ThoughtChallenge = {
-      balanced: 'late',
-      belief: 1,
-      emotions: [{ emotion: 'anxious', intensity: 1 }],
-    }
-
-    await deleteThoughtRecord(firstId)
-    await expect(saveThoughtChallenge(firstId, challenge)).rejects.toThrow(/no longer exists/i)
-    expect(await db.thoughtRecords.count()).toBe(1)
+    expect(screen.getByRole('button', { name: 'Delete this record' })).toBeEnabled()
   })
 })

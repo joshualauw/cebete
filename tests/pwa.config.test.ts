@@ -56,4 +56,10 @@ describe('PWA offline caching', () => {
       expect(patterns.join(',')).toContain(extension)
     }
   })
+
+  it('serves every address from the app shell, including one record at /thoughts/7', () => {
+    // The plugin falls back to index.html for any address unless these narrow it.
+    expect(pwaOptions.workbox?.navigateFallbackAllowlist).toBeUndefined()
+    expect(pwaOptions.workbox?.navigateFallbackDenylist).toBeUndefined()
+  })
 })

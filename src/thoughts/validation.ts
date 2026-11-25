@@ -4,6 +4,7 @@ import {
   validateRecordedTime,
 } from '@/mood/validation'
 
+import { BODY_AREAS, type BodyNote, isBodyArea } from './body'
 import { sameEmotions } from './challenge'
 import { InvalidThoughtRecordError, type InvalidThoughtRecordField } from './errors'
 import {
@@ -14,6 +15,7 @@ import {
   type ThoughtChallenge,
   type ThoughtRecord,
   type ThoughtRecordChanges,
+  type ThoughtTest,
 } from './types'
 
 /** Runs a Mood check and reports its failure as a problem with the thought record. */
@@ -34,7 +36,16 @@ function checkedText(
   value: unknown,
   field: Extract<
     InvalidThoughtRecordField,
-    'situation' | 'action' | 'thought' | 'evidenceFor' | 'evidenceAgainst' | 'balanced'
+    | 'situation'
+    | 'action'
+    | 'thought'
+    | 'evidenceFor'
+    | 'evidenceAgainst'
+    | 'balanced'
+    | 'plan'
+    | 'prediction'
+    | 'result'
+    | 'body'
   >,
   name: string,
 ): string {
@@ -153,6 +164,93 @@ export function validateChallenge(input: unknown): ThoughtChallenge {
   }
 }
 
+/**
+ * Checks a test and returns a clean copy of it. How and when, and the prediction, are required in
+ * both states. A done test also needs what happened and the belief now.
+ */
+export function validateTest(input: unknown): ThoughtTest {
+  if (typeof input !== 'object' || input === null) {
+    throw new InvalidThoughtRecordError('record', 'A test must be an object.')
+  }
+
+  const plan = checkedText(
+    'plan' in input ? input.plan : undefined,
+    'plan',
+    'How and when you test it',
+  )
+  const prediction = checkedText(
+    'prediction' in input ? input.prediction : undefined,
+    'prediction',
+    'The prediction',
+  )
+  const status = 'status' in input ? input.status : undefined
+
+  if (plan === '') {
+    throw new InvalidThoughtRecordError('plan', 'Write how and when you could test this thought.')
+  }
+
+  if (prediction === '') {
+    throw new InvalidThoughtRecordError('prediction', 'Write what you predict would happen.')
+  }
+
+  if (status === 'planned') {
+    return { status, plan, prediction }
+  }
+
+  if (status !== 'done') {
+    throw new InvalidThoughtRecordError('record', 'A test must be planned or done.')
+  }
+
+  const result = checkedText(
+    'result' in input ? input.result : undefined,
+    'result',
+    'What happened',
+  )
+  const belief = 'belief' in input ? input.belief : undefined
+
+  if (result === '') {
+    throw new InvalidThoughtRecordError('result', 'Write what happened when you tested it.')
+  }
+
+  checkBelief(belief)
+
+  return { status, plan, prediction, result, belief }
+}
+
+/**
+ * Checks the body notes of a record and returns a clean copy of them, in the fixed order of the
+ * body areas. Each area may appear once, and blank descriptions are left out. An empty list is
+ * valid: it means there are no notes.
+ */
+export function validateBody(input: unknown): readonly BodyNote[] {
+  if (!Array.isArray(input)) {
+    throw new InvalidThoughtRecordError('body', 'The body notes must be a list.')
+  }
+
+  const items: readonly unknown[] = input
+  const notes: BodyNote[] = []
+
+  for (const item of items) {
+    if (typeof item !== 'object' || item === null || !('area' in item) || !isBodyArea(item.area)) {
+      throw new InvalidThoughtRecordError('body', 'Choose body areas from the list.')
+    }
+
+    if (notes.some(({ area }) => area === item.area)) {
+      throw new InvalidThoughtRecordError('body', 'Each body area can be noted only once.')
+    }
+
+    const description = checkedText(
+      'description' in item ? item.description : undefined,
+      'body',
+      'The description',
+    )
+
+    notes.push({ area: item.area, ...(description && { description }) })
+  }
+
+  return BODY_AREAS.flatMap((area) => notes.filter((note) => note.area === area))
+}
+
 export function validateThoughtRecordTime(value: unknown): number {
   return asThoughtRecordCheck(() => validateRecordedTime(value))
 }
@@ -192,6 +290,14 @@ export function isThoughtRecord(value: unknown): value is ThoughtRecord {
       if (!sameEmotions(record.emotions, challenge.emotions)) {
         return false
       }
+    }
+
+    if ('test' in value && value.test !== undefined) {
+      validateTest(value.test)
+    }
+
+    if ('body' in value && value.body !== undefined) {
+      validateBody(value.body)
     }
   } catch (error) {
     if (error instanceof InvalidThoughtRecordError) {

@@ -3,5 +3,11 @@ export const paths = {
   home: '/',
   mood: '/mood',
   thoughts: '/thoughts',
+  /** One thought record, opened from the Thoughts list. */
+  thoughtRecord: '/thoughts/:id',
   settings: '/settings',
 } as const
+
+export function thoughtRecordPath(id: number): string {
+  return `${paths.thoughts}/${String(id)}`
+}

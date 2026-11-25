@@ -7,7 +7,6 @@ import ThoughtRecordList from '@/thoughts/ThoughtRecordList'
 
 export default function ThoughtsScreen(): ReactElement {
   const [adding, setAdding] = useState(false)
-  const [editing, setEditing] = useState(false)
   const newButtonRef = useRef<HTMLButtonElement>(null)
   const wasAdding = useRef(false)
 
@@ -42,7 +41,6 @@ export default function ThoughtsScreen(): ReactElement {
             size="lg"
             minH="12"
             width="full"
-            disabled={editing}
             onClick={() => {
               setAdding(true)
             }}
@@ -51,7 +49,7 @@ export default function ThoughtsScreen(): ReactElement {
             New thought record
           </Button>
         )}
-        <ThoughtRecordList locked={adding} onEditingChange={setEditing} />
+        <ThoughtRecordList locked={adding} />
       </Stack>
     </Container>
   )

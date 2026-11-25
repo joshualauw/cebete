@@ -6,9 +6,9 @@ import type { Emotion } from '@/mood/emotions'
 import type { EmotionRating } from '@/mood/types'
 
 import { InvalidThoughtRecordError, ThoughtRecordNotFoundError } from './errors'
-import RecordSummary from './RecordSummary'
 import { saveThoughtChallenge } from './repository'
 import StepFlow, { type FlowStep } from './StepFlow'
+import ThoughtLine from './ThoughtLine'
 import { BeliefStep, TextStep } from './ThoughtSteps'
 import type { ThoughtRecord } from './types'
 
@@ -44,7 +44,6 @@ export default function ChallengeFlow({
   const [belief, setBelief] = useState(start.belief)
   const [ratings, setRatings] = useState<readonly EmotionRating[]>(start.ratings)
   const [gone, setGone] = useState(false)
-  const [recordOpen, setRecordOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -159,15 +158,7 @@ export default function ChallengeFlow({
       eyebrow="Challenge"
       discardTitle="Discard this challenge?"
       steps={steps}
-      aboveStep={
-        <RecordSummary
-          record={record}
-          open={recordOpen}
-          onToggle={() => {
-            setRecordOpen((open) => !open)
-          }}
-        />
-      }
+      aboveStep={<ThoughtLine thought={record.thought} />}
       reachedAtStart={record.challenge ? steps.length - 1 : 0}
       changed={changed}
       saving={saving}

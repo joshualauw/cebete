@@ -2,11 +2,10 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { db } from '@/db/db'
-import { toDateTimeFieldValue } from '@/mood/format'
-import ThoughtsScreen from '@/screens/ThoughtsScreen'
+import { formatEntryTime, toDateTimeFieldValue } from '@/mood/format'
 import { addThoughtRecord, deleteThoughtRecord } from '@/thoughts/repository'
 import type { NewThoughtRecord } from '@/thoughts/types'
-import { renderWithProviders } from '@tests/helpers/render'
+import { openRecordScreen } from '@tests/helpers/recordScreen'
 import { newThought } from '@tests/helpers/thoughts'
 
 const OLDER = new Date(2020, 0, 1, 9, 0, 30, 456).getTime()
@@ -24,14 +23,11 @@ const full: NewThoughtRecord = newThought({
 })
 
 let olderId = 0
-let newerId = 0
 
 beforeEach(async () => {
   await db.thoughtRecords.clear()
   olderId = (await addThoughtRecord({ ...full, createdAt: OLDER })).id
-  newerId = (
-    await addThoughtRecord({ ...newThought({ thought: 'newer thought' }), createdAt: NEWER })
-  ).id
+  await addThoughtRecord({ ...newThought({ thought: 'newer thought' }), createdAt: NEWER })
 })
 
 afterEach(() => {
@@ -42,6 +38,10 @@ function advance(): void {
   fireEvent.click(screen.getByRole('button', { name: /^(Next|Skip)$/ }))
 }
 
+function thoughtPart(): HTMLElement {
+  return screen.getByRole('region', { name: 'The thought' })
+}
+
 function flowRegion(): HTMLElement {
   return screen.getByRole('region', { name: 'Edit thought record' })
 }
@@ -50,11 +50,9 @@ function flowHeading(): HTMLElement {
   return within(flowRegion()).getByRole('heading', { level: 2 })
 }
 
-async function openEdit(thought: RegExp | string): Promise<void> {
-  const name =
-    typeof thought === 'string' ? new RegExp(`^Edit the thought record “${thought}`) : thought
-
-  fireEvent.click(await screen.findByRole('button', { name }))
+async function openEdit(): Promise<void> {
+  await openRecordScreen(olderId)
+  fireEvent.click(within(thoughtPart()).getByRole('button', { name: 'Edit' }))
 }
 
 function toTime(): void {
@@ -84,40 +82,19 @@ async function closed(): Promise<void> {
 }
 
 describe('editing a thought record: opening', () => {
-  it('gives every card an Edit action that names the record', async () => {
-    renderWithProviders(<ThoughtsScreen />)
-
-    const buttons = await screen.findAllByRole('button', { name: /^Edit the thought record/ })
-
-    expect(buttons).toHaveLength(2)
-    expect(buttons[0]).toHaveAccessibleName(/“newer thought”/)
-    expect(buttons[1]).toHaveAccessibleName(/“I will fail”/)
-  })
-
-  it('opens the steps in place of the card, starting at the first step', async () => {
-    renderWithProviders(<ThoughtsScreen />)
-    await openEdit('I will fail')
+  it('opens the steps in place of the thought, starting at the first step', async () => {
+    await openEdit()
 
     expect(flowRegion()).toBeInTheDocument()
     expect(within(flowRegion()).getByText('Edit record · Step 1 of 6')).toBeInTheDocument()
     expect(flowHeading()).toHaveTextContent('The situation')
     expect(flowHeading()).toHaveFocus()
-    const cardsOnly = screen
-      .getAllByRole('listitem')
-      .filter((item) => item.closest('ol[aria-label="Steps"]') === null)
-
-    expect(cardsOnly).toHaveLength(2)
-    expect(
-      screen.queryByRole('button', { name: /^Edit the thought record “I will fail/ }),
-    ).not.toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: /^Edit the thought record “newer thought/ }),
-    ).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'The thought' })).not.toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Challenge' })).toBeInTheDocument()
   })
 
   it('fills every step with the record', async () => {
-    renderWithProviders(<ThoughtsScreen />)
-    await openEdit('I will fail')
+    await openEdit()
 
     expect(screen.getByLabelText('What was happening?')).toHaveValue('Team meeting')
     advance()
@@ -137,9 +114,8 @@ describe('editing a thought record: opening', () => {
 })
 
 describe('editing a thought record: saving', () => {
-  it('shows the updated card, announces it, and returns focus to its Edit action', async () => {
-    renderWithProviders(<ThoughtsScreen />)
-    await openEdit('I will fail')
+  it('shows the updated record, announces it, and returns focus to Edit', async () => {
+    await openEdit()
 
     fireEvent.change(screen.getByLabelText('What was happening?'), {
       target: { value: 'Quarterly review' },
@@ -160,14 +136,14 @@ describe('editing a thought record: saving', () => {
     save()
     await closed()
 
-    expect(await screen.findByText('I might cope')).toBeInTheDocument()
-    expect(screen.getByText('Quarterly review')).toBeInTheDocument()
-    expect(screen.queryByText('I will fail')).not.toBeInTheDocument()
+    expect(await within(thoughtPart()).findByText('I might cope')).toBeInTheDocument()
+    expect(within(thoughtPart()).getByText('Quarterly review')).toBeInTheDocument()
+    expect(within(thoughtPart()).getByText('Calm')).toBeInTheDocument()
+    expect(within(thoughtPart()).queryByText('Sad')).not.toBeInTheDocument()
+    expect(within(thoughtPart()).queryByText('I will fail')).not.toBeInTheDocument()
     expect(screen.getByText('Record updated.')).toBeInTheDocument()
 
-    const stored = await db.thoughtRecords.get(olderId)
-
-    expect(stored).toMatchObject({
+    expect(await db.thoughtRecords.get(olderId)).toMatchObject({
       id: olderId,
       situation: 'Quarterly review',
       emotions: [
@@ -179,15 +155,12 @@ describe('editing a thought record: saving', () => {
       belief: 3,
     })
     await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: /^Edit the thought record “I might cope/ }),
-      ).toHaveFocus()
+      expect(within(thoughtPart()).getByRole('button', { name: 'Edit' })).toHaveFocus()
     })
   })
 
   it('keeps the exact time when the time field is not touched', async () => {
-    renderWithProviders(<ThoughtsScreen />)
-    await openEdit('I will fail')
+    await openEdit()
     toTime()
     save()
     await closed()
@@ -195,26 +168,29 @@ describe('editing a thought record: saving', () => {
     expect((await db.thoughtRecords.get(olderId))?.createdAt).toBe(OLDER)
   })
 
-  it('moves the card to its new place when the time changes', async () => {
-    renderWithProviders(<ThoughtsScreen />)
-    await openEdit('I will fail')
+  it('shows the new time, and the list puts the record in its new place', async () => {
+    await openEdit()
     toTime()
     fireEvent.change(timeField(), { target: { value: '2020-01-05T10:00' } })
     save()
     await closed()
 
+    const changed = new Date(2020, 0, 5, 10, 0).getTime()
+
+    expect(await within(thoughtPart()).findByText(formatEntryTime(changed))).toBeInTheDocument()
+    expect((await db.thoughtRecords.get(olderId))?.createdAt).toBe(changed)
+
+    fireEvent.click(screen.getByRole('link', { name: 'Back to thoughts' }))
+
+    await screen.findAllByRole('listitem')
     await waitFor(() => {
       expect(screen.getAllByRole('listitem')[0]).toHaveTextContent('I will fail')
     })
     expect(screen.getAllByRole('listitem')[1]).toHaveTextContent('newer thought')
-    expect((await db.thoughtRecords.get(olderId))?.createdAt).toBe(
-      new Date(2020, 0, 5, 10, 0).getTime(),
-    )
   })
 
-  it('removes an optional answer that was cleared, from the card and from storage', async () => {
-    renderWithProviders(<ThoughtsScreen />)
-    await openEdit('I will fail')
+  it('removes an optional answer that was cleared, from the screen and from storage', async () => {
+    await openEdit()
     fireEvent.change(screen.getByLabelText('What was happening?'), { target: { value: '' } })
     toTime()
     save()
@@ -227,10 +203,9 @@ describe('editing a thought record: saving', () => {
   })
 
   it('refuses a future time, stays open, and leaves the record as it was', async () => {
-    renderWithProviders(<ThoughtsScreen />)
     const before = await db.thoughtRecords.get(olderId)
 
-    await openEdit('I will fail')
+    await openEdit()
     toTime()
     fireEvent.change(timeField(), { target: { value: '2999-01-01T09:00' } })
     save()
@@ -241,8 +216,7 @@ describe('editing a thought record: saving', () => {
   })
 
   it('cannot be saved with no feelings or no thought', async () => {
-    renderWithProviders(<ThoughtsScreen />)
-    await openEdit('I will fail')
+    await openEdit()
     advance()
     fireEvent.click(screen.getByRole('checkbox', { name: 'Anxious' }))
     fireEvent.click(screen.getByRole('checkbox', { name: 'Sad' }))
@@ -253,24 +227,20 @@ describe('editing a thought record: saving', () => {
 
 describe('editing a thought record: closing', () => {
   it('closes at once with nothing to discard when nothing was changed, and returns focus', async () => {
-    renderWithProviders(<ThoughtsScreen />)
-    await openEdit('I will fail')
+    await openEdit()
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
     await closed()
 
     expect(screen.queryByText('Discard this record?')).not.toBeInTheDocument()
     await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: /^Edit the thought record “I will fail/ }),
-      ).toHaveFocus()
+      expect(within(thoughtPart()).getByRole('button', { name: 'Edit' })).toHaveFocus()
     })
   })
 
   it('asks before discarding changes, and the record stays unchanged when discarded', async () => {
-    renderWithProviders(<ThoughtsScreen />)
     const before = await db.thoughtRecords.get(olderId)
 
-    await openEdit('I will fail')
+    await openEdit()
     fireEvent.change(screen.getByLabelText('What was happening?'), { target: { value: 'changed' } })
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
 
@@ -285,14 +255,13 @@ describe('editing a thought record: closing', () => {
   })
 
   it('does not announce an update when the user cancels, even after an earlier update', async () => {
-    renderWithProviders(<ThoughtsScreen />)
-    await openEdit('I will fail')
+    await openEdit()
     toTime()
     save()
     await closed()
     expect(await screen.findByText('Record updated.')).toBeInTheDocument()
 
-    await openEdit('I will fail')
+    fireEvent.click(within(thoughtPart()).getByRole('button', { name: 'Edit' }))
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
     await closed()
 
@@ -300,58 +269,13 @@ describe('editing a thought record: closing', () => {
   })
 })
 
-describe('editing a thought record: one flow at a time', () => {
-  it('switches the other Edit actions and New thought record off while a record is edited', async () => {
-    renderWithProviders(<ThoughtsScreen />)
-    await openEdit('I will fail')
-
-    expect(
-      screen.getByRole('button', { name: /^Edit the thought record “newer thought/ }),
-    ).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'New thought record' })).toBeDisabled()
-
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
-    await closed()
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: /^Edit the thought record “newer thought/ }),
-      ).toBeEnabled()
-    })
-    expect(screen.getByRole('button', { name: 'New thought record' })).toBeEnabled()
-  })
-
-  it('switches every Edit action off while a new record is being captured', async () => {
-    renderWithProviders(<ThoughtsScreen />)
-    fireEvent.click(await screen.findByRole('button', { name: 'New thought record' }))
-
-    for (const button of screen.getAllByRole('button', { name: /^Edit the thought record/ })) {
-      expect(button).toBeDisabled()
-    }
-  })
-})
-
 describe('editing a thought record: a record that is gone', () => {
   it('tells the user, recreates nothing, and closes the flow when the record is deleted meanwhile', async () => {
-    renderWithProviders(<ThoughtsScreen />)
-    await openEdit('I will fail')
+    await openEdit()
     await deleteThoughtRecord(olderId)
 
-    expect(await screen.findByText(/was deleted, so nothing was saved/i)).toBeInTheDocument()
+    expect(await screen.findByText(/could not be found/i)).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'Edit thought record' })).not.toBeInTheDocument()
     expect(await db.thoughtRecords.count()).toBe(1)
-    expect(screen.getByRole('button', { name: 'New thought record' })).toBeEnabled()
-    expect(newerId).toBeGreaterThan(0)
-  })
-
-  it('clears that notice when the next edit starts', async () => {
-    renderWithProviders(<ThoughtsScreen />)
-    await openEdit('I will fail')
-    await deleteThoughtRecord(olderId)
-    await screen.findByText(/was deleted, so nothing was saved/i)
-
-    await openEdit('newer thought')
-
-    expect(screen.queryByText(/was deleted, so nothing was saved/i)).not.toBeInTheDocument()
   })
 })

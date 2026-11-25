@@ -4,6 +4,7 @@ import { NavLink } from 'react-router'
 
 import { navItems } from './items'
 import { bottomNavHeight } from './layout'
+import { paths } from './paths'
 
 // NavLink marks the active link with aria-current="page", which the style below also uses.
 const SectionLink = chakra(NavLink)
@@ -29,8 +30,9 @@ export default function BottomNav(): ReactElement {
           <SectionLink
             key={path}
             to={path}
-            // Without `end`, the Home address would count as current on every section.
-            end
+            // Home must match exactly, or it would count as current on every section. The others
+            // also stay current on the addresses below them, such as one thought record.
+            end={path === paths.home}
             flex="1"
             display="flex"
             flexDirection="column"

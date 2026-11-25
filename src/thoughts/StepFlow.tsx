@@ -208,7 +208,14 @@ export default function StepFlow({
                   </Button>
                 ) : null}
                 {step === last ? (
-                  <Button size="lg" minH="12" flex="1" disabled={saving} onClick={onSave}>
+                  <Button
+                    size="lg"
+                    minH="12"
+                    flex="1"
+                    disabled={saving || waitingFor !== null}
+                    aria-describedby={waitingFor ? waitingId : undefined}
+                    onClick={onSave}
+                  >
                     {saving ? 'Saving…' : 'Save'}
                   </Button>
                 ) : (

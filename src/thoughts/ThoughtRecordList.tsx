@@ -1,20 +1,15 @@
 import { Box, Heading, Text, VisuallyHidden } from '@chakra-ui/react'
 import { type ReactElement, useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router'
 
-import ChallengeFlow from './ChallengeFlow'
-import ChallengeView from './ChallengeView'
-import ThoughtRecordFlow from './ThoughtRecordFlow'
+import { backFromRecord, isAfterDelete, recordLeftFrom } from './listState'
 import ThoughtRecordItem from './ThoughtRecordItem'
 import { useThoughtRecords } from './useThoughtRecords'
 
 type ThoughtRecordListProps = {
-  /** Switches every Edit and Challenge action off, for example while the capture flow is open. */
+  /** Makes every card inert, for example while the capture flow is open. */
   locked?: boolean
-  /** Told whenever a record's edit or challenge flow opens or closes. */
-  onEditingChange?: (editing: boolean) => void
 }
-
-type Flow = { readonly kind: 'edit' | 'challenge' | 'view'; readonly id: number }
 
 function recordsLeft(count: number): string {
   if (count === 0) {
@@ -27,27 +22,33 @@ function recordsLeft(count: number): string {
 /** All thought records, newest first, with a friendly message when there are none. */
 export default function ThoughtRecordList({
   locked = false,
-  onEditingChange,
 }: ThoughtRecordListProps): ReactElement | null {
   const state = useThoughtRecords()
+  const location = useLocation()
+  const navigate = useNavigate()
   const [announcement, setAnnouncement] = useState('')
-  const [flow, setFlow] = useState<Flow | null>(null)
-  const [returned, setReturned] = useState<Flow | null>(null)
-  const [notice, setNotice] = useState('')
+  const [told, setTold] = useState(false)
+  // Read once, when the list appears: later changes to the history entry must not move focus.
+  const [cameFrom] = useState(() => recordLeftFrom(location.state))
   const regionRef = useRef<HTMLElement>(null)
 
-  const records = state.status === 'ready' ? state.records : []
-  const active = flow !== null && records.some((record) => record.id === flow.id) ? flow : null
-  const editing = active !== null
-
-  if (state.status === 'ready' && flow !== null && active === null) {
-    setFlow(null)
-    setNotice('The record you were working on was deleted, so nothing was saved.')
+  // The record screen sends the user here after a delete. Tell them once the list is read, so
+  // that the number of records left is known.
+  if (!told && state.status === 'ready' && isAfterDelete(location.state)) {
+    setTold(true)
+    setAnnouncement(`Record deleted. ${recordsLeft(state.records.length)}`)
   }
 
+  // Once the user has been told, or focus has been decided, clear the note so that a reload or
+  // a later visit does not repeat it.
   useEffect(() => {
-    onEditingChange?.(editing)
-  }, [editing, onEditingChange])
+    if (told) {
+      regionRef.current?.focus()
+    }
+    if (told || cameFrom !== null) {
+      void navigate(location.pathname, { replace: true, state: null })
+    }
+  }, [told, cameFrom, navigate, location.pathname])
 
   if (state.status === 'loading') {
     return null
@@ -61,32 +62,10 @@ export default function ThoughtRecordList({
     )
   }
 
-  function handleDeleted(): void {
-    setAnnouncement(`Record deleted. ${recordsLeft(Math.max(records.length - 1, 0))}`)
-    regionRef.current?.focus()
-  }
-
-  function closeFlow(closed: Flow): void {
-    setFlow(null)
-    setReturned(closed)
-  }
-
-  function open(next: Flow): void {
-    setNotice('')
-    setAnnouncement('')
-    setReturned(null)
-    setFlow(next)
-  }
-
   return (
     <Box as="section" ref={regionRef} aria-label="Thought records" tabIndex={-1} outline="none">
       <VisuallyHidden role="status">{announcement}</VisuallyHidden>
-      {notice ? (
-        <Box role="status" bg="bg.muted" borderRadius="lg" p="3" mb="3">
-          {notice}
-        </Box>
-      ) : null}
-      {records.length === 0 ? (
+      {state.records.length === 0 ? (
         <Box textAlign="center" py="10">
           <Heading as="h2" size="lg" color="colorPalette.fg">
             No thought records yet
@@ -97,65 +76,22 @@ export default function ThoughtRecordList({
         </Box>
       ) : (
         <Box as="ul" display="flex" flexDirection="column" gap="3" listStyleType="none" m="0" p="0">
-          {records.map((record) =>
-            record.id === active?.id ? (
-              <Box as="li" key={record.id}>
-                {active.kind === 'view' && record.challenge ? (
-                  <ChallengeView
-                    record={record}
-                    challenge={record.challenge}
-                    onClose={() => {
-                      closeFlow(active)
-                    }}
-                    onRevise={() => {
-                      setFlow({ kind: 'challenge', id: record.id })
-                    }}
-                  />
-                ) : active.kind === 'challenge' ? (
-                  <ChallengeFlow
-                    record={record}
-                    onSaved={() => {
-                      setAnnouncement('Challenge saved.')
-                    }}
-                    onDone={() => {
-                      closeFlow(active)
-                    }}
-                  />
-                ) : (
-                  <ThoughtRecordFlow
-                    record={record}
-                    onSaved={() => {
-                      setAnnouncement('Record updated.')
-                    }}
-                    onDone={() => {
-                      closeFlow(active)
-                    }}
-                  />
-                )}
-              </Box>
-            ) : (
-              <ThoughtRecordItem
-                key={record.id}
-                record={record}
-                onDeleted={handleDeleted}
-                onEdit={() => {
-                  open({ kind: 'edit', id: record.id })
-                }}
-                onChallenge={() => {
-                  open({ kind: 'challenge', id: record.id })
-                }}
-                onView={() => {
-                  open({ kind: 'view', id: record.id })
-                }}
-                editDisabled={locked || editing}
-                focusEdit={returned?.kind === 'edit' && returned.id === record.id}
-                focusPrimary={
-                  (returned?.kind === 'challenge' || returned?.kind === 'view') &&
-                  returned.id === record.id
-                }
-              />
-            ),
-          )}
+          {state.records.map((record) => (
+            <ThoughtRecordItem
+              key={record.id}
+              record={record}
+              locked={locked}
+              focus={record.id === cameFrom}
+              onOpen={() => {
+                // The list entry remembers which record was opened, so the browser's back button
+                // returns focus to its card too.
+                void navigate(location.pathname, {
+                  replace: true,
+                  state: backFromRecord(record.id),
+                })
+              }}
+            />
+          ))}
         </Box>
       )}
     </Box>

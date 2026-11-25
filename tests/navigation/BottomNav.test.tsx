@@ -46,6 +46,13 @@ describe('BottomNav', () => {
     expect(currentSections()).toEqual([section])
   })
 
+  it('keeps Thoughts current on the address of one record, and Home not', () => {
+    renderWithProviders(<BottomNav />, '/thoughts/7')
+
+    expect(currentSections()).toEqual(['Thoughts'])
+    expect(screen.getByRole('link', { name: 'Home' })).not.toHaveAttribute('aria-current')
+  })
+
   it('does not treat Home as current on another section', () => {
     renderWithProviders(<BottomNav />, '/mood')
 
