@@ -2,7 +2,7 @@
 
 This is a **TypeScript** project. All source, tests and config that can be written in TypeScript must be. Plain `.js` is only for tooling scripts that cannot be TypeScript.
 
-Skills that write or change code (currently **/seafarer**) must follow this file. Skills that only touch tickets and docs (**/advisor**, **/secretary**, **/bookeeper**) do not need it.
+Skills that write or change code (currently **/seafarer** and **/mercenary**) must follow this file. Skills that only touch tickets and docs (**/advisor**, **/secretary**, **/bookeeper**) do not need it.
 
 ## TypeScript best practices
 
