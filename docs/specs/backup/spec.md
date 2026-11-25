@@ -21,7 +21,7 @@ flowchart TD
 - **Export:** one button downloads a single file named with the local date. A calm message says how many entries were saved and notes any unreadable ones left out, so the backup can always be restored.
 - **Import:** the app checks the picked file completely before touching anything. A valid file leads to a confirmation with the backup's date and contents, a warning that everything on the device will be erased and replaced, and a suggestion to export first. Cancel is the safe, focused choice.
 - **Refused files:** a file that is not JSON, not a cebete backup, damaged (a bad row, a missing table, repeated ids), made by a newer app version, or too old is refused with its own plain-words message. Data is unchanged.
-- **Older backups:** a backup from an earlier data version is brought up to date as it is read, with the same conversion as the database upgrade (see [storage](../storage/spec.md)). Records made before challenges, tests or body notes existed restore without them.
+- **Older backups:** a backup from an earlier data version is brought up to date as it is read, with the same conversion as the database upgrade (see [storage](../storage/spec.md)). Records made before challenges, tests or body notes existed restore without them, and a backup made before the coping library existed restores with an empty library.
 - **Replace:** every backed-up table is cleared and refilled with the backup's rows, ids included, in a single database transaction.
 
 ## Data and files
@@ -46,4 +46,5 @@ flowchart TD
 - [storage](../storage/spec.md): the database that is read and replaced, and the version conversion backups reuse.
 - [mood-log](../mood-log/spec.md): the mood entries that are backed up.
 - [thoughts](../thoughts/spec.md): the thought records that are backed up.
+- [coping](../coping/spec.md): the coping items that are backed up.
 - [app-shell](../app-shell/spec.md): hosts the Settings screen.

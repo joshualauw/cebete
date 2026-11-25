@@ -1,6 +1,6 @@
 ## Summary
 
-Storage is cebete's local-only data layer: an IndexedDB database managed through Dexie, with a versioned schema that feature modules extend. All user data lives on the device and is never sent to a server. It holds the mood entries (see [mood-log](../mood-log/spec.md)) and the thought records (see [thoughts](../thoughts/spec.md)). It does not include sync; backup and restore are in [backup](../backup/spec.md).
+Storage is cebete's local-only data layer: an IndexedDB database managed through Dexie, with a versioned schema that feature modules extend. All user data lives on the device and is never sent to a server. It holds the mood entries (see [mood-log](../mood-log/spec.md)), the thought records (see [thoughts](../thoughts/spec.md)) and the coping items (see [coping](../coping/spec.md)). It does not include sync; backup and restore are in [backup](../backup/spec.md).
 
 ## How it works
 
@@ -23,7 +23,7 @@ flowchart LR
 ## Data and files
 
 - **Library:** Dexie on IndexedDB, database named `cebete`.
-- **Schema:** version 4, with two tables, `moodEntries` and `thoughtRecords`, each listed by the time its rows were recorded. A thought record's challenge, test and body notes live inside the same row and needed no new version. Versions 1 to 3 stay declared, because a device may still hold an older database.
+- **Schema:** version 5, with three tables. `moodEntries` and `thoughtRecords` are each listed by the time their rows were recorded; `copingItems` is ordered by id alone, since items keep the order they were added. A thought record's challenge, test and body notes live inside the same row and needed no new version. Versions 1 to 4 stay declared, because a device may still hold an older database, and a database from version 4 opens with an empty coping table.
 - **Code:** `src/db/` holds the database definition, the persistence request, and the startup routine called from `src/main.tsx`. The conversion of old entries is a pure function in `src/mood/migration.ts`. Tests are in `tests/db/`, against `fake-indexeddb`, including upgrades from the older layouts.
 
 ## Rules and edge cases
@@ -40,4 +40,5 @@ flowchart LR
 - [app-shell](../app-shell/spec.md): starts storage and provides the offline-capable app around it.
 - [mood-log](../mood-log/spec.md): stores its entries here.
 - [thoughts](../thoughts/spec.md): stores its records here.
+- [coping](../coping/spec.md): stores its items here.
 - [backup](../backup/spec.md): exports and restores everything stored here.
