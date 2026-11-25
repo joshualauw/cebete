@@ -33,6 +33,11 @@ export function formatBackupDate(isoDate: string): string {
   )
 }
 
+/** The day of the last backup, in the user's own language and time zone. */
+export function formatLastBackupDate(at: number): string {
+  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(at)
+}
+
 /** What to tell the user after a backup was restored. */
 export function describeRestore(counts: Readonly<Record<string, number>>): string {
   const contents = describeCounts(counts)

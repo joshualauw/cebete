@@ -1,8 +1,9 @@
 import { Button, chakra, Container, Heading, Stack, Text } from '@chakra-ui/react'
-import { type ReactElement, useId } from 'react'
+import { type ReactElement, useId, useRef } from 'react'
 import { LuHeart } from 'react-icons/lu'
 import { Link } from 'react-router'
 
+import BackupReminder from '@/backup/BackupReminder'
 import { paths } from '@/navigation/paths'
 
 const CardLink = chakra(Link)
@@ -11,12 +12,20 @@ export default function HomeScreen(): ReactElement {
   const id = useId()
   const titleId = `${id}-title`
   const hintId = `${id}-hint`
+  const headingRef = useRef<HTMLHeadingElement>(null)
 
   return (
     <Container maxW="lg" px="6" py="10">
       <Stack gap="6">
         <Stack gap="3">
-          <Heading as="h1" size="2xl" color="colorPalette.fg">
+          <Heading
+            as="h1"
+            ref={headingRef}
+            tabIndex={-1}
+            size="2xl"
+            color="colorPalette.fg"
+            outline="none"
+          >
             cebete
           </Heading>
           <Text fontSize="lg" color="fg.muted">
@@ -48,6 +57,11 @@ export default function HomeScreen(): ReactElement {
             See what can help, a few taps away.
           </Text>
         </CardLink>
+        <BackupReminder
+          onSnoozed={() => {
+            headingRef.current?.focus()
+          }}
+        />
         <Button asChild variant="outline" size="lg" minH="12" width="full">
           <Link to={paths.coping}>
             <LuHeart aria-hidden="true" />

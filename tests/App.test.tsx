@@ -4,6 +4,9 @@ import { useLocation } from 'react-router'
 import { describe, expect, it } from 'vitest'
 
 import App from '@/App'
+import { db } from '@/db/db'
+import { addMoodEntry } from '@/mood/repository'
+import { oneEmotion } from '@tests/helpers/mood'
 import { renderWithProviders } from '@tests/helpers/render'
 
 /** Shows the current address, so tests can see where the app ended up. */
@@ -75,6 +78,18 @@ describe('App sections', () => {
     expect(screen.getByTestId('address')).toHaveTextContent(/^\/settle$/)
     expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('link', { name: 'Mood' })).not.toHaveAttribute('aria-current')
+  })
+
+  it('opens Settings from the backup reminder on Home', async () => {
+    await db.moodEntries.clear()
+    await addMoodEntry(oneEmotion('calm', 4))
+    renderAppAt('/')
+
+    fireEvent.click(await screen.findByRole('link', { name: 'Back up now' }))
+
+    expect(screen.getByTestId('address')).toHaveTextContent(/^\/settings$/)
+    expect(screen.getByRole('heading', { level: 1, name: 'Settings' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Backup' })).toBeInTheDocument()
   })
 
   it('opens the settle screen from the card on Home, keeps Home highlighted, and goes back', () => {

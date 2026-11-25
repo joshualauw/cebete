@@ -5,6 +5,7 @@ import { LuDownload } from 'react-icons/lu'
 import { describeExport } from './describe'
 import { backupFileName, downloadTextFile } from './download'
 import { createBackup, serializeBackup } from './export'
+import { recordBackup } from './lastBackup'
 
 const EXPORT_FAILED = 'Your backup could not be created right now. Please try again.'
 
@@ -23,6 +24,7 @@ export default function ExportBackup(): ReactElement {
       const result = await createBackup()
 
       downloadTextFile(backupFileName(new Date()), serializeBackup(result))
+      recordBackup()
       setSaved(describeExport(result.counts, result.skipped))
     } catch (error) {
       console.error('Backup could not be created', error)
