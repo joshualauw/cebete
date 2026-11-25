@@ -17,9 +17,9 @@ describe('backup registry', () => {
   })
 
   it('would notice a table that a future module adds and forgets to register', () => {
-    const tableNames = [...db.tables.map((table) => table.name), 'thoughtRecords', 'activities']
+    const tableNames = [...db.tables.map((table) => table.name), 'sleepLogs', 'activities']
 
-    expect(unregisteredTables(tableNames)).toEqual(['thoughtRecords', 'activities'])
+    expect(unregisteredTables(tableNames)).toEqual(['sleepLogs', 'activities'])
   })
 
   it('knows, for each table, the version it first appeared in and what to call its rows', () => {

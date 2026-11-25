@@ -51,18 +51,10 @@ function validateRating(input: unknown): EmotionRating {
 }
 
 /**
- * Checks an entry against the rules and returns a clean copy of it. It accepts `unknown`
- * because entries can come from anywhere (a form today, an import later), and it builds the
- * result from the checked fields only, so nothing unexpected, such as a time, gets through.
+ * Checks the emotions of an entry: one to three, each from the list with a whole-number rating
+ * from 0 to 10, none repeated. Returns a clean copy in the order given.
  */
-export function validateNewMoodEntry(input: unknown): NewMoodEntry {
-  if (typeof input !== 'object' || input === null) {
-    throw new InvalidMoodEntryError('entry', 'A mood entry must be an object.')
-  }
-
-  const emotions = 'emotions' in input ? input.emotions : undefined
-  const note = 'note' in input ? input.note : undefined
-
+export function validateEmotionRatings(emotions: unknown): readonly EmotionRating[] {
   if (!Array.isArray(emotions)) {
     throw new InvalidMoodEntryError('emotions', 'Choose at least one emotion.')
   }
@@ -81,6 +73,22 @@ export function validateNewMoodEntry(input: unknown): NewMoodEntry {
   if (new Set(ratings.map((rating) => rating.emotion)).size !== ratings.length) {
     throw new InvalidMoodEntryError('emotions', 'Each emotion can be chosen only once.')
   }
+
+  return ratings
+}
+
+/**
+ * Checks an entry against the rules and returns a clean copy of it. It accepts `unknown`
+ * because entries can come from anywhere (a form today, an import later), and it builds the
+ * result from the checked fields only, so nothing unexpected, such as a time, gets through.
+ */
+export function validateNewMoodEntry(input: unknown): NewMoodEntry {
+  if (typeof input !== 'object' || input === null) {
+    throw new InvalidMoodEntryError('entry', 'A mood entry must be an object.')
+  }
+
+  const note = 'note' in input ? input.note : undefined
+  const ratings = validateEmotionRatings('emotions' in input ? input.emotions : undefined)
 
   if (note !== undefined && typeof note !== 'string') {
     throw new InvalidMoodEntryError('note', 'The note must be text.')

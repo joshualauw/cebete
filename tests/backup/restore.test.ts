@@ -4,9 +4,9 @@ import { createBackup, serializeBackup } from '@/backup/export'
 import { parseBackup } from '@/backup/parse'
 import { restoreBackup } from '@/backup/restore'
 import type { ParsedBackup } from '@/backup/types'
-import { db } from '@/db/db'
+import { db, SCHEMA_VERSION } from '@/db/db'
 import { addMoodEntry, listMoodEntries } from '@/mood/repository'
-import { backupText, currentEntry, legacyEntry } from '@tests/helpers/backup'
+import { backupText, currentEntry, currentTables, legacyEntry } from '@tests/helpers/backup'
 import { oneEmotion } from '@tests/helpers/mood'
 
 beforeEach(async () => {
@@ -15,10 +15,10 @@ beforeEach(async () => {
 
 function parsed(rows: readonly unknown[]): ParsedBackup {
   return {
-    version: 3,
+    version: SCHEMA_VERSION,
     exportedAt: '2026-11-24T10:00:00.000Z',
-    tables: { moodEntries: rows },
-    counts: { moodEntries: rows.length },
+    tables: { moodEntries: rows, thoughtRecords: [] },
+    counts: { moodEntries: rows.length, thoughtRecords: 0 },
   }
 }
 
@@ -130,10 +130,10 @@ describe('refusing a file never changes the device', () => {
     ['not json', 'this is not json'],
     ['not a backup', '{"hello":"world"}'],
     ['from a newer version', backupText({ version: 99 })],
-    ['damaged', backupText({ tables: { moodEntries: [currentEntry(1), { id: 2 }] } })],
+    ['damaged', backupText({ tables: currentTables([currentEntry(1), { id: 2 }]) })],
     [
       'holding duplicate ids',
-      backupText({ tables: { moodEntries: [currentEntry(1), currentEntry(1)] } }),
+      backupText({ tables: currentTables([currentEntry(1), currentEntry(1)]) }),
     ],
   ])('leaves everything as it was for a file that is %s', async (_label, text) => {
     await addMoodEntry({ ...oneEmotion('calm', 4), note: 'safe' })

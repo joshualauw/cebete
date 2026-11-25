@@ -38,7 +38,7 @@ flowchart TD
 ## Data and files
 
 - **Entry:** an id, a list of one to three emotion-and-rating pairs in the order chosen, an optional note, and the time it was recorded. It lives in the `moodEntries` table (see [storage](../storage/spec.md)).
-- **Emotion-and-rating pair:** a small shape that stands on its own, so later modules such as the thought record can reuse it without a data migration.
+- **Emotion-and-rating pair:** a small shape that stands on its own. The thought record (see [thoughts](../thoughts/spec.md)) reuses it, together with the emotion picker, the rating sliders, the emotion and time checks and the date helpers, which stay in this module.
 - **Emotions:** a preset list of twelve, mixing pleasant and unpleasant: calm, happy, grateful, hopeful, content, tired, sad, anxious, stressed, angry, lonely and overwhelmed.
 - **Libraries:** Dexie live queries through `dexie-react-hooks`, Chakra UI, and `react-icons`.
 - **Code:** `src/mood/` holds the types and limits, the emotion list, validation, reading, adding, editing and deleting entries, the date and time helpers, the conversion of old entries, the live-query hook, and the form, picker, ratings, list and entry components. `src/screens/MoodScreen.tsx` is the screen. Tests are in `tests/mood/` and `tests/screens/`.
@@ -59,3 +59,4 @@ flowchart TD
 
 - [storage](../storage/spec.md): the table that holds the entries, and how older entries are upgraded.
 - [app-shell](../app-shell/spec.md): the Mood section, the theme and the bottom bar around the log.
+- [thoughts](../thoughts/spec.md): reuses the emotion picker, sliders and checks.

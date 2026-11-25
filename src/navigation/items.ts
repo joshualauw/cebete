@@ -1,5 +1,5 @@
 import type { IconType } from 'react-icons'
-import { LuHouse, LuSettings, LuSmile } from 'react-icons/lu'
+import { LuHouse, LuMessageCircle, LuSettings, LuSmile } from 'react-icons/lu'
 
 import { paths } from './paths'
 
@@ -13,5 +13,6 @@ export type NavItem = {
 export const navItems: readonly NavItem[] = [
   { label: 'Home', path: paths.home, icon: LuHouse },
   { label: 'Mood', path: paths.mood, icon: LuSmile },
+  { label: 'Thoughts', path: paths.thoughts, icon: LuMessageCircle },
   { label: 'Settings', path: paths.settings, icon: LuSettings },
 ]

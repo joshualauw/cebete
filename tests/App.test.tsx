@@ -41,6 +41,15 @@ describe('App sections', () => {
     expect(screen.queryByText(/coming soon/i)).not.toBeInTheDocument()
   })
 
+  it('opens straight onto the Thoughts section when the page is loaded there', async () => {
+    renderAppAt('/thoughts')
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Thoughts' })).toBeInTheDocument()
+    expect(screen.getByTestId('address')).toHaveTextContent('/thoughts')
+    expect(await screen.findByText(/no thought records yet/i)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Thoughts' })).toHaveAttribute('aria-current', 'page')
+  })
+
   it('opens straight onto the Settings section when the page is loaded there', () => {
     renderAppAt('/settings')
 
@@ -57,14 +66,14 @@ describe('App sections', () => {
     expect(screen.queryByRole('heading', { name: 'Settings' })).not.toBeInTheDocument()
   })
 
-  it.each(['/', '/mood', '/settings', '/nowhere'])(
+  it.each(['/', '/mood', '/thoughts', '/settings', '/nowhere'])(
     'shows the bottom bar on every screen, including %s',
     (route) => {
       renderAppAt(route)
 
       const bar = screen.getByRole('navigation', { name: 'Main' })
 
-      expect(within(bar).getAllByRole('link')).toHaveLength(3)
+      expect(within(bar).getAllByRole('link')).toHaveLength(4)
     },
   )
 

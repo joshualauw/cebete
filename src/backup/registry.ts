@@ -1,5 +1,6 @@
 import { convertLegacyEntry } from '@/mood/migration'
 import { isMoodEntry } from '@/mood/validation'
+import { isThoughtRecord } from '@/thoughts/validation'
 
 /** How one stored table takes part in a backup. */
 export type BackupTable = {
@@ -31,5 +32,11 @@ export const backupTables: Readonly<Record<string, BackupTable>> = {
     upgrade: (rows, fromVersion) =>
       fromVersion < 3 ? rows.map((row) => convertLegacyEntry(row)) : rows,
     isValidRow: isMoodEntry,
+  },
+  thoughtRecords: {
+    since: 4,
+    label: { one: 'thought record', other: 'thought records' },
+    upgrade: (rows) => rows,
+    isValidRow: isThoughtRecord,
   },
 }

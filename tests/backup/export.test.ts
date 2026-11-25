@@ -16,8 +16,8 @@ describe('createBackup', () => {
 
     expect(file.app).toBe('cebete')
     expect(file.version).toBe(SCHEMA_VERSION)
-    expect(file.tables).toEqual({ moodEntries: [] })
-    expect(counts).toEqual({ moodEntries: 0 })
+    expect(file.tables).toEqual({ moodEntries: [], thoughtRecords: [] })
+    expect(counts).toEqual({ moodEntries: 0, thoughtRecords: 0 })
     expect(skipped).toBe(0)
   })
 
@@ -40,7 +40,7 @@ describe('createBackup', () => {
 
     const { file, counts } = await createBackup()
 
-    expect(counts).toEqual({ moodEntries: 2 })
+    expect(counts).toEqual({ moodEntries: 2, thoughtRecords: 0 })
     expect(file.tables.moodEntries).toHaveLength(2)
     expect(file.tables.moodEntries).toContainEqual(first)
     expect(file.tables.moodEntries).toContainEqual(second)
@@ -54,7 +54,7 @@ describe('createBackup', () => {
     const { file, counts, skipped } = await createBackup()
 
     expect(file.tables.moodEntries).toEqual([good])
-    expect(counts).toEqual({ moodEntries: 1 })
+    expect(counts).toEqual({ moodEntries: 1, thoughtRecords: 0 })
     expect(skipped).toBe(2)
     // The unreadable rows are not deleted from the device by making a backup.
     expect(await db.moodEntries.count()).toBe(3)
@@ -77,7 +77,7 @@ describe('serializeBackup', () => {
     const text = serializeBackup(await createBackup())
     const parsed = parseBackup(text)
 
-    expect(parsed.counts).toEqual({ moodEntries: 1 })
+    expect(parsed.counts).toEqual({ moodEntries: 1, thoughtRecords: 0 })
     expect(parsed.tables.moodEntries).toEqual([saved])
   })
 

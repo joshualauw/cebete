@@ -8,6 +8,7 @@ import { paths } from '@/navigation/paths'
 import HomeScreen from '@/screens/HomeScreen'
 import MoodScreen from '@/screens/MoodScreen'
 import SettingsScreen from '@/screens/SettingsScreen'
+import ThoughtsScreen from '@/screens/ThoughtsScreen'
 
 export default function App(): ReactElement {
   return (
@@ -17,6 +18,7 @@ export default function App(): ReactElement {
         <Routes>
           <Route path={paths.home} element={<HomeScreen />} />
           <Route path={paths.mood} element={<MoodScreen />} />
+          <Route path={paths.thoughts} element={<ThoughtsScreen />} />
           <Route path={paths.settings} element={<SettingsScreen />} />
           {/* A mistyped address never shows an empty page. */}
           <Route path="*" element={<Navigate to={paths.home} replace />} />

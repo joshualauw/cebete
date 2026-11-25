@@ -47,10 +47,13 @@ describe('CebeteDb', () => {
     expect(testDb.verno).toBe(SCHEMA_VERSION)
   })
 
-  it('has a table for mood entries, and no other tables yet', async () => {
+  it('has a table for mood entries and one for thought records, and no others yet', async () => {
     const testDb = await openTestDb()
 
-    expect(testDb.tables.map((table) => table.name)).toEqual(['moodEntries'])
+    expect(testDb.tables.map((table) => table.name).sort()).toEqual([
+      'moodEntries',
+      'thoughtRecords',
+    ])
   })
 
   it('keeps the same schema version when reopened', async () => {
@@ -72,7 +75,10 @@ describe('CebeteDb', () => {
     const upgraded = await openTestDb(name)
 
     expect(upgraded.verno).toBe(SCHEMA_VERSION)
-    expect(upgraded.tables.map((table) => table.name)).toEqual(['moodEntries'])
+    expect(upgraded.tables.map((table) => table.name).sort()).toEqual([
+      'moodEntries',
+      'thoughtRecords',
+    ])
 
     await upgraded.moodEntries.add({
       emotions: [{ emotion: 'calm', intensity: 4 }],
@@ -202,5 +208,32 @@ describe('CebeteDb: upgrading entries saved by the previous version', () => {
 
     expect(upgraded.verno).toBe(SCHEMA_VERSION)
     expect(await upgraded.moodEntries.count()).toBe(0)
+  })
+})
+
+describe('CebeteDb: upgrading a database made by version 3', () => {
+  it('keeps the mood entries and adds an empty table for thought records', async () => {
+    const name = testDbName()
+    const old = new Dexie(name)
+
+    old.version(1).stores({})
+    old.version(2).stores({ moodEntries: '++id, createdAt' })
+    old.version(3).stores({ moodEntries: '++id, createdAt' })
+    await old.open()
+    await old.table('moodEntries').bulkAdd([
+      { emotions: [{ emotion: 'calm', intensity: 4 }], note: 'kept', createdAt: 100 },
+      { emotions: [{ emotion: 'sad', intensity: 7 }], createdAt: 200 },
+    ])
+    old.close()
+
+    const upgraded = await openTestDb(name)
+
+    expect(upgraded.verno).toBe(SCHEMA_VERSION)
+    expect(await upgraded.moodEntries.count()).toBe(2)
+    expect((await upgraded.moodEntries.orderBy('createdAt').toArray())[0]).toMatchObject({
+      emotions: [{ emotion: 'calm', intensity: 4 }],
+      note: 'kept',
+    })
+    expect(await upgraded.thoughtRecords.count()).toBe(0)
   })
 })

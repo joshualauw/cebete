@@ -1,0 +1,204 @@
+import {
+  InvalidMoodEntryError,
+  validateEmotionRatings,
+  validateRecordedTime,
+} from '@/mood/validation'
+
+import { sameEmotions } from './challenge'
+import { InvalidThoughtRecordError, type InvalidThoughtRecordField } from './errors'
+import {
+  BELIEF_MAX,
+  BELIEF_MIN,
+  type NewThoughtRecord,
+  TEXT_MAX_LENGTH,
+  type ThoughtChallenge,
+  type ThoughtRecord,
+  type ThoughtRecordChanges,
+} from './types'
+
+/** Runs a Mood check and reports its failure as a problem with the thought record. */
+function asThoughtRecordCheck<T>(check: () => T): T {
+  try {
+    return check()
+  } catch (error) {
+    if (error instanceof InvalidMoodEntryError) {
+      const field = error.field === 'intensity' || error.field === 'note' ? 'emotions' : error.field
+
+      throw new InvalidThoughtRecordError(field === 'entry' ? 'record' : field, error.message)
+    }
+    throw error
+  }
+}
+
+function checkedText(
+  value: unknown,
+  field: Extract<
+    InvalidThoughtRecordField,
+    'situation' | 'action' | 'thought' | 'evidenceFor' | 'evidenceAgainst' | 'balanced'
+  >,
+  name: string,
+): string {
+  if (value !== undefined && typeof value !== 'string') {
+    throw new InvalidThoughtRecordError(field, `${name} must be text.`)
+  }
+
+  const text = value?.trim() ?? ''
+
+  if (text.length > TEXT_MAX_LENGTH) {
+    throw new InvalidThoughtRecordError(
+      field,
+      `${name} can be at most ${String(TEXT_MAX_LENGTH)} characters.`,
+    )
+  }
+
+  return text
+}
+
+function checkBelief(belief: unknown): asserts belief is number {
+  if (
+    typeof belief !== 'number' ||
+    !Number.isInteger(belief) ||
+    belief < BELIEF_MIN ||
+    belief > BELIEF_MAX
+  ) {
+    throw new InvalidThoughtRecordError(
+      'belief',
+      `How much you believe it must be a whole number from ${String(BELIEF_MIN)} to ${String(BELIEF_MAX)}.`,
+    )
+  }
+}
+
+/**
+ * Checks a thought record against the rules and returns a clean copy of it. The thought and at
+ * least one feeling are required; blank optional answers are left out instead of being saved.
+ */
+export function validateNewThoughtRecord(input: unknown): NewThoughtRecord {
+  if (typeof input !== 'object' || input === null) {
+    throw new InvalidThoughtRecordError('record', 'A thought record must be an object.')
+  }
+
+  const emotions = asThoughtRecordCheck(() =>
+    validateEmotionRatings('emotions' in input ? input.emotions : undefined),
+  )
+  const situation = checkedText(
+    'situation' in input ? input.situation : undefined,
+    'situation',
+    'The situation',
+  )
+  const action = checkedText('action' in input ? input.action : undefined, 'action', 'What you did')
+  const thought = checkedText(
+    'thought' in input ? input.thought : undefined,
+    'thought',
+    'The thought',
+  )
+  const belief = 'belief' in input ? input.belief : undefined
+
+  if (thought === '') {
+    throw new InvalidThoughtRecordError('thought', 'Write the thought you had.')
+  }
+
+  checkBelief(belief)
+
+  return {
+    ...(situation && { situation }),
+    emotions,
+    ...(action && { action }),
+    thought,
+    belief,
+  }
+}
+
+/**
+ * Checks a challenge and returns a clean copy of it. The balanced thought is required; blank
+ * evidence is left out. It does not know the record, so the feelings are only checked to be a
+ * valid set of ratings here.
+ */
+export function validateChallenge(input: unknown): ThoughtChallenge {
+  if (typeof input !== 'object' || input === null) {
+    throw new InvalidThoughtRecordError('record', 'A challenge must be an object.')
+  }
+
+  const evidenceFor = checkedText(
+    'evidenceFor' in input ? input.evidenceFor : undefined,
+    'evidenceFor',
+    'The evidence for the thought',
+  )
+  const evidenceAgainst = checkedText(
+    'evidenceAgainst' in input ? input.evidenceAgainst : undefined,
+    'evidenceAgainst',
+    'The evidence against the thought',
+  )
+  const balanced = checkedText(
+    'balanced' in input ? input.balanced : undefined,
+    'balanced',
+    'The balanced thought',
+  )
+  const belief = 'belief' in input ? input.belief : undefined
+  const emotions = asThoughtRecordCheck(() =>
+    validateEmotionRatings('emotions' in input ? input.emotions : undefined),
+  )
+
+  if (balanced === '') {
+    throw new InvalidThoughtRecordError('balanced', 'Write a more balanced thought.')
+  }
+
+  checkBelief(belief)
+
+  return {
+    ...(evidenceFor && { evidenceFor }),
+    ...(evidenceAgainst && { evidenceAgainst }),
+    balanced,
+    belief,
+    emotions,
+  }
+}
+
+export function validateThoughtRecordTime(value: unknown): number {
+  return asThoughtRecordCheck(() => validateRecordedTime(value))
+}
+
+/** Checks an edited record: the same rules as a new one, plus the time it happened. */
+export function validateThoughtRecordChanges(input: unknown): ThoughtRecordChanges {
+  const record = validateNewThoughtRecord(input)
+  const createdAt = validateThoughtRecordTime(
+    typeof input === 'object' && input !== null && 'createdAt' in input
+      ? input.createdAt
+      : undefined,
+  )
+
+  return { ...record, createdAt }
+}
+
+/** Tells whether something read back from storage is a complete, valid thought record. */
+export function isThoughtRecord(value: unknown): value is ThoughtRecord {
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+
+  if (!('id' in value) || typeof value.id !== 'number') {
+    return false
+  }
+
+  if (!('createdAt' in value) || typeof value.createdAt !== 'number') {
+    return false
+  }
+
+  try {
+    const record = validateNewThoughtRecord(value)
+
+    if ('challenge' in value && value.challenge !== undefined) {
+      const challenge = validateChallenge(value.challenge)
+
+      if (!sameEmotions(record.emotions, challenge.emotions)) {
+        return false
+      }
+    }
+  } catch (error) {
+    if (error instanceof InvalidThoughtRecordError) {
+      return false
+    }
+    throw error
+  }
+
+  return true
+}

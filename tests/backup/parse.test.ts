@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { InvalidBackupError, type InvalidBackupReason } from '@/backup/errors'
 import { parseBackup } from '@/backup/parse'
 import { SCHEMA_VERSION } from '@/db/db'
-import { backupText, currentEntry, legacyEntry } from '@tests/helpers/backup'
+import { backupText, currentTables, currentEntry, legacyEntry } from '@tests/helpers/backup'
 
 /** Parses text and reports why it was refused, or undefined if it was accepted. */
 function refusal(text: string): InvalidBackupReason | undefined {
@@ -25,14 +25,14 @@ describe('parseBackup: a valid backup', () => {
 
     expect(backup.version).toBe(SCHEMA_VERSION)
     expect(backup.exportedAt).toBe('2026-11-24T10:00:00.000Z')
-    expect(backup.counts).toEqual({ moodEntries: 2 })
+    expect(backup.counts).toEqual({ moodEntries: 2, thoughtRecords: 0 })
     expect(backup.tables.moodEntries).toEqual([currentEntry(1), currentEntry(2, 'sad', 7)])
   })
 
   it('may hold no entries at all', () => {
-    const backup = parseBackup(backupText({ tables: { moodEntries: [] } }))
+    const backup = parseBackup(backupText({ tables: currentTables([]) }))
 
-    expect(backup.counts).toEqual({ moodEntries: 0 })
+    expect(backup.counts).toEqual({ moodEntries: 0, thoughtRecords: 0 })
   })
 
   it('may hold entries with a note, and with several emotions', () => {
@@ -48,7 +48,7 @@ describe('parseBackup: a valid backup', () => {
       },
     ]
 
-    expect(refusal(backupText({ tables: { moodEntries: rows } }))).toBeUndefined()
+    expect(refusal(backupText({ tables: currentTables(rows) }))).toBeUndefined()
   })
 })
 
@@ -127,7 +127,7 @@ describe('parseBackup: versions', () => {
   it('accepts a version 1 backup, which holds no data', () => {
     const backup = parseBackup(backupText({ version: 1, tables: {} }))
 
-    expect(backup.counts).toEqual({ moodEntries: 0 })
+    expect(backup.counts).toEqual({ moodEntries: 0, thoughtRecords: 0 })
     expect(backup.tables.moodEntries).toEqual([])
   })
 })
@@ -142,11 +142,11 @@ describe('parseBackup: damaged backups', () => {
   })
 
   it('refuses a table it does not know', () => {
-    expect(refusal(backupText({ tables: { moodEntries: [], secrets: [] } }))).toBe('damaged')
+    expect(refusal(backupText({ tables: { ...currentTables([]), secrets: [] } }))).toBe('damaged')
   })
 
   it('refuses a table that is not a list of rows', () => {
-    expect(refusal(backupText({ tables: { moodEntries: { 1: currentEntry(1) } } }))).toBe('damaged')
+    expect(refusal(backupText({ tables: currentTables({ 1: currentEntry(1) }) }))).toBe('damaged')
   })
 
   it('refuses a current backup that is missing a table, so it cannot silently wipe one', () => {
@@ -168,13 +168,13 @@ describe('parseBackup: damaged backups', () => {
     ],
     ['in the old layout', legacyEntry(1)],
   ])('refuses a current backup with a row that is %s', (_label, row) => {
-    expect(refusal(backupText({ tables: { moodEntries: [currentEntry(9), row] } }))).toBe('damaged')
+    expect(refusal(backupText({ tables: currentTables([currentEntry(9), row]) }))).toBe('damaged')
   })
 
   it('refuses a backup whose rows share an id, which could not be restored', () => {
     const rows = [currentEntry(1), currentEntry(1, 'sad', 7)]
 
-    expect(refusal(backupText({ tables: { moodEntries: rows } }))).toBe('damaged')
+    expect(refusal(backupText({ tables: currentTables(rows) }))).toBe('damaged')
   })
 })
 

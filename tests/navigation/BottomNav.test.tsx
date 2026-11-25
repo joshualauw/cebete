@@ -18,12 +18,12 @@ describe('BottomNav', () => {
     expect(screen.getByRole('navigation', { name: 'Main' })).toBeInTheDocument()
   })
 
-  it('offers Home, Mood and Settings, in that order', () => {
+  it('offers Home, Mood, Thoughts and Settings, in that order', () => {
     renderWithProviders(<BottomNav />)
 
     const links = within(screen.getByRole('navigation', { name: 'Main' })).getAllByRole('link')
 
-    expect(links.map((link) => link.textContent)).toEqual(['Home', 'Mood', 'Settings'])
+    expect(links.map((link) => link.textContent)).toEqual(['Home', 'Mood', 'Thoughts', 'Settings'])
   })
 
   it('points each item at its own section address', () => {
@@ -31,12 +31,14 @@ describe('BottomNav', () => {
 
     expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/')
     expect(screen.getByRole('link', { name: 'Mood' })).toHaveAttribute('href', '/mood')
+    expect(screen.getByRole('link', { name: 'Thoughts' })).toHaveAttribute('href', '/thoughts')
     expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute('href', '/settings')
   })
 
   it.each([
     ['/', 'Home'],
     ['/mood', 'Mood'],
+    ['/thoughts', 'Thoughts'],
     ['/settings', 'Settings'],
   ])('marks only the current section as current at %s', (route, section) => {
     renderWithProviders(<BottomNav />, route)
@@ -55,7 +57,7 @@ describe('BottomNav', () => {
 
     const icons = screen.getByRole('navigation', { name: 'Main' }).querySelectorAll('svg')
 
-    expect(icons).toHaveLength(3)
+    expect(icons).toHaveLength(4)
     for (const icon of icons) {
       expect(icon).toHaveAttribute('aria-hidden', 'true')
     }

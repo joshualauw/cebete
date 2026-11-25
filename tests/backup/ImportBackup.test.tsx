@@ -6,7 +6,7 @@ import ImportBackup from '@/backup/ImportBackup'
 import { db } from '@/db/db'
 import MoodList from '@/mood/MoodList'
 import { addMoodEntry } from '@/mood/repository'
-import { backupText, currentEntry, legacyEntry } from '@tests/helpers/backup'
+import { backupText, currentEntry, currentTables, legacyEntry } from '@tests/helpers/backup'
 import { oneEmotion } from '@tests/helpers/mood'
 import { renderWithProviders } from '@tests/helpers/render'
 
@@ -96,7 +96,9 @@ describe('ImportBackup: choosing a file', () => {
     pickFile(backupText())
     await screen.findByRole('group', QUESTION)
 
-    expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus()
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus()
+    })
   })
 
   it('keeps Import switched off while the question is open', async () => {
@@ -111,7 +113,7 @@ describe('ImportBackup: choosing a file', () => {
   it('says "no entries" for a backup that holds none', async () => {
     renderWithProviders(<ImportBackup />)
 
-    pickFile(backupText({ tables: { moodEntries: [] } }))
+    pickFile(backupText({ tables: currentTables([]) }))
 
     expect(await screen.findByRole('group', QUESTION)).toHaveTextContent(/holds no entries\./)
   })
@@ -147,7 +149,9 @@ describe('ImportBackup: Cancel', () => {
     await screen.findByRole('group', QUESTION)
     cancel()
 
-    expect(screen.getByRole('button', { name: 'Import backup' })).toHaveFocus()
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Import backup' })).toHaveFocus()
+    })
     expect(screen.getByRole('button', { name: 'Import backup' })).toBeEnabled()
     expect(screen.getByRole('status')).toBeEmptyDOMElement()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
@@ -203,14 +207,16 @@ describe('ImportBackup: confirming', () => {
 
     expect(screen.queryByRole('group', QUESTION)).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Import backup' })).toBeEnabled()
-    expect(screen.getByRole('button', { name: 'Import backup' })).toHaveFocus()
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Import backup' })).toHaveFocus()
+    })
   })
 
   it('can restore a backup that holds no entries, which empties the device', async () => {
     await seedExisting()
     renderWithProviders(<ImportBackup />)
 
-    pickFile(backupText({ tables: { moodEntries: [] } }))
+    pickFile(backupText({ tables: currentTables([]) }))
     await screen.findByRole('group', QUESTION)
     confirm()
 
@@ -269,12 +275,12 @@ describe('ImportBackup: files that are refused', () => {
     ['a backup from a newer version', backupText({ version: 99 }), /newer version of cebete/],
     [
       'a damaged backup',
-      backupText({ tables: { moodEntries: [currentEntry(1), { id: 2 }] } }),
+      backupText({ tables: currentTables([currentEntry(1), { id: 2 }]) }),
       /damaged/,
     ],
     [
       'a backup with entries that share an id',
-      backupText({ tables: { moodEntries: [currentEntry(1), currentEntry(1)] } }),
+      backupText({ tables: currentTables([currentEntry(1), currentEntry(1)]) }),
       /damaged/,
     ],
   ])('shows a clear message for %s, and changes nothing', async (_label, contents, wording) => {
