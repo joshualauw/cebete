@@ -2,10 +2,10 @@
 title: Challenge and test dates
 type: feat
 priority: medium
-status: todo
+status: done
 date: 2026-11-25
 modules: [thoughts, backup]
-synced: false
+synced: true
 epic: first-release
 ---
 
@@ -52,10 +52,10 @@ The record screen shows "Challenged on" and the date in the Challenge part, and 
 
 ## Acceptance Criteria
 
-- [ ] When the user saves a challenge, the Challenge part shows "Challenged on" with today's date.
-- [ ] When the user revises a challenge and saves, the date updates to that moment.
-- [ ] When the user logs a test result, the Test part shows "Tested on" with today's date.
-- [ ] When the user revises only the plan of a logged test, the "Tested on" date stays the same.
-- [ ] When a test is only planned, no test date is shown.
-- [ ] When the user opens a record challenged before this change, it shows no date and works as before.
-- [ ] After a backup and restore, the dates remain.
+- [x] When the user saves a challenge, the Challenge part shows "Challenged on" with today's date.
+- [x] When the user revises a challenge and saves, the date updates to that moment.
+- [x] When the user logs a test result, the Test part shows "Tested on" with today's date.
+- [x] When the user revises only the plan of a logged test, the "Tested on" date stays the same.
+- [x] When a test is only planned, no test date is shown.
+- [x] When the user opens a record challenged before this change, it shows no date and works as before.
+- [x] After a backup and restore, the dates remain.
