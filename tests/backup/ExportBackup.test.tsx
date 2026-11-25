@@ -58,7 +58,7 @@ describe('ExportBackup', () => {
 
     const backup = parseBackup((await downloads.files[0]?.blob.text()) ?? '')
 
-    expect(backup.counts).toEqual({ moodEntries: 2, thoughtRecords: 0 })
+    expect(backup.counts).toEqual({ moodEntries: 2, thoughtRecords: 0, copingItems: 0 })
     expect(backup.tables.moodEntries).toContainEqual(first)
     expect(backup.tables.moodEntries).toContainEqual(second)
   })
@@ -82,6 +82,7 @@ describe('ExportBackup', () => {
     expect(parseBackup((await downloads.files[0]?.blob.text()) ?? '').counts).toEqual({
       moodEntries: 0,
       thoughtRecords: 0,
+      copingItems: 0,
     })
   })
 

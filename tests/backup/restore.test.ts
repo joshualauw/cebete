@@ -17,8 +17,8 @@ function parsed(rows: readonly unknown[]): ParsedBackup {
   return {
     version: SCHEMA_VERSION,
     exportedAt: '2026-11-24T10:00:00.000Z',
-    tables: { moodEntries: rows, thoughtRecords: [] },
-    counts: { moodEntries: rows.length, thoughtRecords: 0 },
+    tables: { moodEntries: rows, thoughtRecords: [], copingItems: [] },
+    counts: { moodEntries: rows.length, thoughtRecords: 0, copingItems: 0 },
   }
 }
 

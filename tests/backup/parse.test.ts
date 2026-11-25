@@ -25,14 +25,14 @@ describe('parseBackup: a valid backup', () => {
 
     expect(backup.version).toBe(SCHEMA_VERSION)
     expect(backup.exportedAt).toBe('2026-11-24T10:00:00.000Z')
-    expect(backup.counts).toEqual({ moodEntries: 2, thoughtRecords: 0 })
+    expect(backup.counts).toEqual({ moodEntries: 2, thoughtRecords: 0, copingItems: 0 })
     expect(backup.tables.moodEntries).toEqual([currentEntry(1), currentEntry(2, 'sad', 7)])
   })
 
   it('may hold no entries at all', () => {
     const backup = parseBackup(backupText({ tables: currentTables([]) }))
 
-    expect(backup.counts).toEqual({ moodEntries: 0, thoughtRecords: 0 })
+    expect(backup.counts).toEqual({ moodEntries: 0, thoughtRecords: 0, copingItems: 0 })
   })
 
   it('may hold entries with a note, and with several emotions', () => {
@@ -127,7 +127,7 @@ describe('parseBackup: versions', () => {
   it('accepts a version 1 backup, which holds no data', () => {
     const backup = parseBackup(backupText({ version: 1, tables: {} }))
 
-    expect(backup.counts).toEqual({ moodEntries: 0, thoughtRecords: 0 })
+    expect(backup.counts).toEqual({ moodEntries: 0, thoughtRecords: 0, copingItems: 0 })
     expect(backup.tables.moodEntries).toEqual([])
   })
 })

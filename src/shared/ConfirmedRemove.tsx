@@ -5,6 +5,8 @@ import { LuTrash2 } from 'react-icons/lu'
 type ConfirmedRemoveProps = {
   /** The control that asks the question, for example "Delete this record". */
   buttonLabel: string
+  /** A fuller name for the control, when its label alone would be ambiguous in a list. */
+  buttonName?: string
   /** The name of the question for assistive technology. */
   groupLabel: string
   question: string
@@ -30,6 +32,7 @@ type ConfirmedRemoveProps = {
  */
 export default function ConfirmedRemove({
   buttonLabel,
+  buttonName,
   groupLabel,
   question,
   confirmLabel,
@@ -86,6 +89,7 @@ export default function ConfirmedRemove({
           variant="ghost"
           minH="12"
           disabled={locked}
+          aria-label={buttonName}
           onClick={() => {
             setErrorMessage(null)
             onAsk()

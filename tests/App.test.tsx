@@ -59,6 +59,62 @@ describe('App sections', () => {
     expect(screen.getByTestId('address')).toHaveTextContent('/settings')
   })
 
+  it('opens straight onto the coping library, with Home still highlighted in the bar', async () => {
+    renderAppAt('/coping')
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Coping library' })).toBeInTheDocument()
+    expect(await screen.findByText(/no items yet/i)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('link', { name: 'Mood' })).not.toHaveAttribute('aria-current')
+  })
+
+  it('opens straight onto the settle screen, with Home still highlighted in the bar', () => {
+    renderAppAt('/settle')
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Need to settle?' })).toBeInTheDocument()
+    expect(screen.getByTestId('address')).toHaveTextContent(/^\/settle$/)
+    expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('link', { name: 'Mood' })).not.toHaveAttribute('aria-current')
+  })
+
+  it('opens the settle screen from the card on Home, keeps Home highlighted, and goes back', () => {
+    renderAppAt('/')
+
+    fireEvent.click(screen.getByRole('link', { name: 'Need to settle?' }))
+
+    expect(screen.getByTestId('address')).toHaveTextContent(/^\/settle$/)
+    expect(screen.getByRole('heading', { level: 1, name: 'Need to settle?' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page')
+
+    fireEvent.click(screen.getByRole('link', { name: 'Back to home' }))
+
+    expect(screen.getByRole('heading', { level: 1, name: 'cebete' })).toBeInTheDocument()
+    expect(screen.getByTestId('address')).toHaveTextContent(/^\/$/)
+  })
+
+  it('opens the coping library from the settle screen', () => {
+    renderAppAt('/settle')
+
+    fireEvent.click(screen.getByRole('link', { name: 'Edit my coping library' }))
+
+    expect(screen.getByTestId('address')).toHaveTextContent(/^\/coping$/)
+    expect(screen.getByRole('heading', { level: 1, name: 'Coping library' })).toBeInTheDocument()
+  })
+
+  it('opens the coping library from Home, and goes back to Home from there', () => {
+    renderAppAt('/')
+
+    fireEvent.click(screen.getByRole('link', { name: 'My coping library' }))
+
+    expect(screen.getByTestId('address')).toHaveTextContent(/^\/coping$/)
+    expect(screen.getByRole('heading', { level: 1, name: 'Coping library' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('link', { name: 'Back to home' }))
+
+    expect(screen.getByRole('heading', { level: 1, name: 'cebete' })).toBeInTheDocument()
+    expect(screen.getByTestId('address')).toHaveTextContent(/^\/$/)
+  })
+
   it('does not show the other sections', () => {
     renderAppAt('/mood')
 

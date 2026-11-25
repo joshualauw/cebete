@@ -20,12 +20,13 @@ export function legacyEntry(
   return { id, emotion, intensity, createdAt: 1_700_000_000_000 + id, ...extra }
 }
 
-/** The tables of a backup made by the current version, with no thought records unless given. */
+/** The tables of a backup made by the current version, with no other rows unless given. */
 export function currentTables(
   moodEntries: unknown,
   thoughtRecords: readonly unknown[] = [],
+  copingItems: readonly unknown[] = [],
 ): Record<string, unknown> {
-  return { moodEntries, thoughtRecords }
+  return { moodEntries, thoughtRecords, copingItems }
 }
 
 /** The text of a backup file. Anything can be overridden, to build a file that is wrong. */
@@ -34,7 +35,7 @@ export function backupText(overrides: Record<string, unknown> = {}): string {
     app: 'cebete',
     version: SCHEMA_VERSION,
     exportedAt: '2026-11-24T10:00:00.000Z',
-    tables: { moodEntries: [currentEntry(1), currentEntry(2, 'sad', 7)], thoughtRecords: [] },
+    tables: currentTables([currentEntry(1), currentEntry(2, 'sad', 7)]),
     ...overrides,
   })
 }

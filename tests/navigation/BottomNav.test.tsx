@@ -53,6 +53,18 @@ describe('BottomNav', () => {
     expect(screen.getByRole('link', { name: 'Home' })).not.toHaveAttribute('aria-current')
   })
 
+  it('keeps Home current on the coping library, which has no item of its own', () => {
+    renderWithProviders(<BottomNav />, '/coping')
+
+    expect(currentSections()).toEqual(['Home'])
+  })
+
+  it('keeps Home current on the settle screen, which has no item of its own', () => {
+    renderWithProviders(<BottomNav />, '/settle')
+
+    expect(currentSections()).toEqual(['Home'])
+  })
+
   it('does not treat Home as current on another section', () => {
     renderWithProviders(<BottomNav />, '/mood')
 

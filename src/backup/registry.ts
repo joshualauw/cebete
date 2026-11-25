@@ -1,3 +1,4 @@
+import { isCopingItem } from '@/coping/validation'
 import { convertLegacyEntry } from '@/mood/migration'
 import { isMoodEntry } from '@/mood/validation'
 import { isThoughtRecord } from '@/thoughts/validation'
@@ -38,5 +39,11 @@ export const backupTables: Readonly<Record<string, BackupTable>> = {
     label: { one: 'thought record', other: 'thought records' },
     upgrade: (rows) => rows,
     isValidRow: isThoughtRecord,
+  },
+  copingItems: {
+    since: 5,
+    label: { one: 'coping item', other: 'coping items' },
+    upgrade: (rows) => rows,
+    isValidRow: isCopingItem,
   },
 }

@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable, type Transaction } from 'dexie'
 
+import type { CopingItem } from '@/coping/types'
 import { convertLegacyEntry } from '@/mood/migration'
 import type { MoodEntry } from '@/mood/types'
 import type { ThoughtRecord } from '@/thoughts/types'
@@ -11,10 +12,11 @@ export const DB_NAME = 'cebete'
  * declaring a new version, so existing data is migrated instead of lost. Old versions stay
  * declared below, because a device may still hold a database created by one of them.
  */
-export const SCHEMA_VERSION = 4
+export const SCHEMA_VERSION = 5
 
 const MOOD_ENTRIES = 'moodEntries'
 const THOUGHT_RECORDS = 'thoughtRecords'
+const COPING_ITEMS = 'copingItems'
 
 /** Moves entries saved in the old single-emotion layout to the new one. */
 async function upgradeMoodEntries(transaction: Transaction): Promise<void> {
@@ -36,6 +38,8 @@ export class CebeteDb extends Dexie {
   declare moodEntries: EntityTable<MoodEntry, 'id'>
   /** Thought records, listed by the time they happened. */
   declare thoughtRecords: EntityTable<ThoughtRecord, 'id'>
+  /** Coping items, kept in the order they were added. */
+  declare copingItems: EntityTable<CopingItem, 'id'>
 
   constructor(name: string = DB_NAME) {
     super(name)
@@ -50,9 +54,16 @@ export class CebeteDb extends Dexie {
       .stores({ [MOOD_ENTRIES]: '++id, createdAt' })
       .upgrade(upgradeMoodEntries)
     // Version 4: adds the thought records table.
+    this.version(4).stores({
+      [MOOD_ENTRIES]: '++id, createdAt',
+      [THOUGHT_RECORDS]: '++id, createdAt',
+    })
+    // Version 5: adds the coping items table. Items keep the order they were added, so the id is
+    // all the order they need.
     this.version(SCHEMA_VERSION).stores({
       [MOOD_ENTRIES]: '++id, createdAt',
       [THOUGHT_RECORDS]: '++id, createdAt',
+      [COPING_ITEMS]: '++id',
     })
   }
 }

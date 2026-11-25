@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react'
 
-import ConfirmedRemove from './ConfirmedRemove'
+import ConfirmedRemove from '@/shared/ConfirmedRemove'
+
 import { removeThoughtPlan } from './repository'
 
 type RemovePlanSectionProps = {

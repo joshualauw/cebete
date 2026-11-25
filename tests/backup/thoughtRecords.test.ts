@@ -80,7 +80,7 @@ describe('backup: thought records', () => {
 
     await restoreBackup(older)
 
-    expect(older.counts).toEqual({ moodEntries: 2, thoughtRecords: 0 })
+    expect(older.counts).toEqual({ moodEntries: 2, thoughtRecords: 0, copingItems: 0 })
     expect(await db.thoughtRecords.count()).toBe(0)
     expect(await db.moodEntries.count()).toBe(2)
   })

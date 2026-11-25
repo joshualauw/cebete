@@ -1,16 +1,19 @@
 import { Box, chakra, Flex } from '@chakra-ui/react'
 import type { ReactElement } from 'react'
-import { NavLink } from 'react-router'
+import { Link, useLocation } from 'react-router'
 
+import { isCurrentSection } from './current'
 import { navItems } from './items'
 import { bottomNavHeight } from './layout'
-import { paths } from './paths'
 
-// NavLink marks the active link with aria-current="page", which the style below also uses.
-const SectionLink = chakra(NavLink)
+// The current item carries aria-current="page", which the style below also uses. It is set by
+// hand, not by NavLink, because Home must also stay current on addresses it hosts.
+const SectionLink = chakra(Link)
 
 /** The bottom navigation bar: always visible, within thumb reach, and clear of the notch. */
 export default function BottomNav(): ReactElement {
+  const { pathname } = useLocation()
+
   return (
     <Box
       as="nav"
@@ -30,9 +33,7 @@ export default function BottomNav(): ReactElement {
           <SectionLink
             key={path}
             to={path}
-            // Home must match exactly, or it would count as current on every section. The others
-            // also stay current on the addresses below them, such as one thought record.
-            end={path === paths.home}
+            aria-current={isCurrentSection(path, pathname) ? 'page' : undefined}
             flex="1"
             display="flex"
             flexDirection="column"

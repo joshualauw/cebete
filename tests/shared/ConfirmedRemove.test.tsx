@@ -2,16 +2,17 @@ import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { type ReactElement, useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
-import ConfirmedRemove from '@/thoughts/ConfirmedRemove'
+import ConfirmedRemove from '@/shared/ConfirmedRemove'
 import { renderWithProviders } from '@tests/helpers/render'
 
 type HarnessProps = {
   remove: () => Promise<void>
   /** Whether the control stays on screen after a removal, as it does until storage catches up. */
   staysAfterRemoval?: boolean
+  buttonName?: string
 }
 
-function Harness({ remove, staysAfterRemoval = true }: HarnessProps): ReactElement {
+function Harness({ remove, staysAfterRemoval = true, buttonName }: HarnessProps): ReactElement {
   const [asking, setAsking] = useState(false)
   const [removed, setRemoved] = useState(false)
 
@@ -20,6 +21,7 @@ function Harness({ remove, staysAfterRemoval = true }: HarnessProps): ReactEleme
       {removed && !staysAfterRemoval ? null : (
         <ConfirmedRemove
           buttonLabel="Remove it"
+          buttonName={buttonName}
           groupLabel="Remove this"
           question="Remove this? This cannot be undone."
           confirmLabel="Yes, remove"
@@ -47,6 +49,16 @@ function Harness({ remove, staysAfterRemoval = true }: HarnessProps): ReactEleme
 }
 
 describe('ConfirmedRemove', () => {
+  it('can give its button a fuller name than its label', () => {
+    renderWithProviders(
+      <Harness remove={vi.fn().mockResolvedValue(undefined)} buttonName="Remove the red one" />,
+    )
+
+    expect(screen.getByRole('button', { name: 'Remove the red one' })).toHaveTextContent(
+      'Remove it',
+    )
+  })
+
   it('focuses Keep first, and gives focus back to its button on Keep', async () => {
     renderWithProviders(<Harness remove={vi.fn().mockResolvedValue(undefined)} />)
     fireEvent.click(screen.getByRole('button', { name: 'Remove it' }))

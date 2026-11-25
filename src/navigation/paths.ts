@@ -5,6 +5,10 @@ export const paths = {
   thoughts: '/thoughts',
   /** One thought record, opened from the Thoughts list. */
   thoughtRecord: '/thoughts/:id',
+  /** The coping library, entered from Home. It has no bar item of its own. */
+  coping: '/coping',
+  /** The quick "settle now" screen, entered from Home. It has no bar item of its own. */
+  settle: '/settle',
   settings: '/settings',
 } as const
 

@@ -47,10 +47,11 @@ describe('CebeteDb', () => {
     expect(testDb.verno).toBe(SCHEMA_VERSION)
   })
 
-  it('has a table for mood entries and one for thought records, and no others yet', async () => {
+  it('has tables for mood entries, thought records and coping items, and no others yet', async () => {
     const testDb = await openTestDb()
 
     expect(testDb.tables.map((table) => table.name).sort()).toEqual([
+      'copingItems',
       'moodEntries',
       'thoughtRecords',
     ])
@@ -76,6 +77,7 @@ describe('CebeteDb', () => {
 
     expect(upgraded.verno).toBe(SCHEMA_VERSION)
     expect(upgraded.tables.map((table) => table.name).sort()).toEqual([
+      'copingItems',
       'moodEntries',
       'thoughtRecords',
     ])
@@ -235,5 +237,40 @@ describe('CebeteDb: upgrading a database made by version 3', () => {
       note: 'kept',
     })
     expect(await upgraded.thoughtRecords.count()).toBe(0)
+  })
+})
+
+describe('CebeteDb: upgrading a database made by version 4', () => {
+  it('keeps the mood entries and thought records and adds an empty coping library', async () => {
+    const name = testDbName()
+    const old = new Dexie(name)
+
+    old.version(1).stores({})
+    old.version(2).stores({ moodEntries: '++id, createdAt' })
+    old.version(3).stores({ moodEntries: '++id, createdAt' })
+    old.version(4).stores({ moodEntries: '++id, createdAt', thoughtRecords: '++id, createdAt' })
+    await old.open()
+    await old.table('moodEntries').add({
+      emotions: [{ emotion: 'calm', intensity: 4 }],
+      note: 'kept',
+      createdAt: 100,
+    })
+    await old.table('thoughtRecords').add({
+      emotions: [{ emotion: 'sad', intensity: 7 }],
+      thought: 'kept too',
+      belief: 6,
+      createdAt: 200,
+    })
+    old.close()
+
+    const upgraded = await openTestDb(name)
+
+    expect(upgraded.verno).toBe(SCHEMA_VERSION)
+    expect(await upgraded.moodEntries.count()).toBe(1)
+    expect((await upgraded.thoughtRecords.toArray())[0]).toMatchObject({ thought: 'kept too' })
+    expect(await upgraded.copingItems.count()).toBe(0)
+
+    await upgraded.copingItems.add({ type: 'do', text: 'Walk' })
+    expect(await upgraded.copingItems.count()).toBe(1)
   })
 })
