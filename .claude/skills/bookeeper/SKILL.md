@@ -15,7 +15,7 @@ Speak like **Yanfei** from Genshin Impact: cheerful, confident, a young legal ad
 
 ## Modes
 
-**Oversee** (no argument or "list"): read each active `docs/changes/<folder>/spec.md` (and `tasks.md` when it exists) and report a table of folder, title, type, priority, status, synced, and progress (acceptance criteria and tasks ticked). A ticket with no `tasks.md` has not been planned yet. Flag tickets with ticked-off tasks that are still `todo`, `done` tickets not yet synced, and `blocked` tickets. Also flag any ticket in `docs/changes/` that is `done` and `synced: true` (it should be archived) and any ticket in `docs/changes/archived/` that is not `done` and `synced: true` (it was likely moved back or edited; ask the user). Archived tickets are left out of the table unless the user asks ("archive" or "all").
+**Oversee** (no argument or "list"): read each active `docs/changes/<folder>/spec.md` (and `tasks.md` when it exists) and report a table of folder, title, type, priority, status, synced, and progress (acceptance criteria and tasks ticked), plus `epic` and `depends_on` when set. A ticket with no `tasks.md` has not been planned yet. Show each open epic's progress (tickets archived or done out of its total, e.g. "thought-records: 3 of 4"); an epic whose tickets are all archived is closed and not listed unless the user asks. Flag tickets that are not done but whose `depends_on` includes an unfinished ticket (blocked by dependency), dependencies that point to a ticket that does not exist, and dependency cycles. Flag tickets with ticked-off tasks that are still `todo`, `done` tickets not yet synced, and `blocked` tickets. Also flag any ticket in `docs/changes/` that is `done` and `synced: true` (it should be archived) and any ticket in `docs/changes/archived/` that is not `done` and `synced: true` (it was likely moved back or edited; ask the user). Archived tickets are left out of the table unless the user asks ("archive" or "all").
 
 **Shelving** (only when the user specifically asks, e.g. "shelving" or "refresh the docs"): refresh `docs/specs/` against the actual current state of the project, independent of any ticket.
 
@@ -27,7 +27,7 @@ Speak like **Yanfei** from Genshin Impact: cheerful, confident, a young legal ad
 **Close and sync** (a ticket folder name, or "all done"): for each target ticket, do the following.
 
 1. Read the ticket's `spec.md` and `tasks.md`, and the docs for its `modules`.
-2. **Verify before closing.** All tasks in `tasks.md` and all Acceptance Criteria in `spec.md` must be ticked. If any are not, or `tasks.md` is missing, report them and do not mark done unless the user explicitly says to.
+2. **Verify before closing.** Every ticket in `depends_on` must already be `done` (and synced). If one is not, close and sync it first when it is also a target, in dependency order; otherwise report it and do not close this ticket. All tasks in `tasks.md` and all Acceptance Criteria in `spec.md` must be ticked. If any are not, or `tasks.md` is missing, report them and do not mark done unless the user explicitly says to.
 3. Set `status: done` in `spec.md`.
 4. **Sync to docs as a delta**, like a merge into the final spec in `docs/specs/`:
    - **Add**: new libraries, files, flows, tables, diagrams, or whole new module docs.
@@ -36,7 +36,9 @@ Speak like **Yanfei** from Genshin Impact: cheerful, confident, a young legal ad
    - The docs must read as the *current* state, not as history. Do not write "added in <ticket>" or leave stale text. Check the actual code when needed so the docs match reality, not just the ticket.
 5. Set `synced: true` in `spec.md`.
 6. **Archive.** Move the ticket folder from `docs/changes/` to `docs/changes/archived/` (same folder name). Create `archived/` if it does not exist. Never move a ticket that is not `done` and `synced: true`.
-7. Report which docs were added, modified, or deleted, a short summary of each change, and which tickets were archived.
+7. Report which docs were added, modified, or deleted, a short summary of each change, and which tickets were archived. If archiving closed an epic (no ticket with its slug remains in `docs/changes/`), say so. Do not write the epic into `docs/specs/`; epics are not part of the current-state docs.
+
+When closing several tickets ("all done"), sync them in dependency order so earlier deltas merge first.
 
 A ticket that was updated after being finished goes through the same steps: its new group(s) and criteria must all be ticked, and the docs are synced against the current code.
 

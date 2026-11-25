@@ -18,14 +18,15 @@ A ticket folder in `docs/changes/` (the user names it; ask if unclear). If its `
 ## Steps
 
 1. Read the ticket's `spec.md` (and `tasks.md` if present), then the `docs/specs/` files for its `modules`.
-2. **Plan.** If `tasks.md` does not exist, generate it from `spec.md` (see "Task groups"), then **stop**: show the groups, ask the user to review, and tell them to run **/seafarer** again. Implement nothing and leave `status` unchanged in this run. Add no docs-update task.
-3. When implementation starts, set `status: in-progress` in `spec.md`.
-4. Work through groups **one at a time, in order**. Tick each `- [x]` as soon as it is truly done.
-5. Write the tests that prove the **Acceptance Criteria** and the *Constraints and edge cases* belonging to the current group; you decide the detailed tests. Tick a criterion in `spec.md` only when it passes.
-6. Do not edit `docs/specs/`; syncing is **/bookeeper**'s job.
-7. The **last task of every group** is the checks task. Do it only after all other tasks in the group are done: run, in the order from `.claude/rules/code-conventions.md`, **typecheck → format → lint → build → test**. Fix failures and rerun from the failing step. Tick it only when all five passed in this run. A group is not done, and you must not move on to the next group, while this task is unticked.
-8. After a green group, **move straight on to the next one without pausing**. Do not stop for review between groups. Stop only when blocked or when a "When to stop and ask" condition applies; if you do stop, report which groups are done and what is needed. If the user asks to go one group at a time, pause after each green group.
-9. When all groups pass, report once (what was done, per group) and suggest **/bookeeper** to close and sync.
+2. **Check dependencies.** Read `depends_on` in `spec.md`. Look up each listed folder in `docs/changes/` and `docs/changes/archived/`. If a dependency is missing, or is not `done`, you may still plan (step 3), but do not implement: stop, name the unfinished tickets, and suggest finishing them first. If the user explicitly says to proceed anyway, confirm once, then continue.
+3. **Plan.** If `tasks.md` does not exist, generate it from `spec.md` (see "Task groups"), then **stop**: show the groups, ask the user to review, and tell them to run **/seafarer** again. Implement nothing and leave `status` unchanged in this run. Add no docs-update task.
+4. When implementation starts, set `status: in-progress` in `spec.md`.
+5. Work through groups **one at a time, in order**. Tick each `- [x]` as soon as it is truly done.
+6. Write the tests that prove the **Acceptance Criteria** and the *Constraints and edge cases* belonging to the current group; you decide the detailed tests. Tick a criterion in `spec.md` only when it passes.
+7. Do not edit `docs/specs/`; syncing is **/bookeeper**'s job.
+8. The **last task of every group** is the checks task. Do it only after all other tasks in the group are done: run, in the order from `.claude/rules/code-conventions.md`, **typecheck → format → lint → build → test**. Fix failures and rerun from the failing step. Tick it only when all five passed in this run. A group is not done, and you must not move on to the next group, while this task is unticked.
+9. After a green group, **move straight on to the next one without pausing**. Do not stop for review between groups. Stop only when blocked or when a "When to stop and ask" condition applies; if you do stop, report which groups are done and what is needed. If the user asks to go one group at a time, pause after each green group.
+10. When all groups pass, report once (what was done, per group) and suggest **/bookeeper** to close and sync.
 
 ## Task groups
 
@@ -57,4 +58,4 @@ A ticket updated after it was finished has a `tasks.md` whose groups are already
 
 ## When to stop and ask
 
-Stop rather than guess when a task is ambiguous or the ticket contradicts code or docs; you find a major bug or design problem the specs don't explain; or the work needs scope beyond the ticket, a new dependency or a breaking change. If blocked, set `status: blocked` and explain what is needed.
+Stop rather than guess when a task is ambiguous, a `depends_on` ticket is unfinished or missing, or the ticket contradicts code or docs; you find a major bug or design problem the specs don't explain; or the work needs scope beyond the ticket, a new dependency or a breaking change. If blocked, set `status: blocked` and explain what is needed.

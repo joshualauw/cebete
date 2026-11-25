@@ -49,14 +49,18 @@ status: todo # todo | in-progress | blocked | done
 date: 2026-11-22 # date created (YYYY-MM-DD)
 modules: [authentication] # module folders in docs/specs/ this ticket touches
 synced: false # true once merged into docs/specs/
+depends_on: [23-11-26-user-accounts] # optional: ticket folder names that must be done first
+epic: google-login # optional: slug of the delivery effort this ticket belongs to
 ---
 ```
+
+`depends_on` and `epic` are optional; omit them when they do not apply (see "Dependencies and epics").
 
 Then these sections, in order. Omit an optional section when it is empty (no "n/a" filler).
 
 1. **User Story** (required) — "As a …, I want …, so that …".
 2. **Goal** (required) — why this change, in 1 to 3 sentences.
-3. **Scope** (required) — what is in scope, and what is explicitly out of scope. Note any dependency on another ticket here.
+3. **Scope** (required) — what is in scope, and what is explicitly out of scope. Mention a dependency on another ticket here in a few words, and record it in `depends_on`.
 4. **Behavior** (required) — what the system does afterwards, in business terms, centered on the core workflow. No code, and no function or component names.
 5. **Decisions** (optional) — what was agreed, and the options rejected with the reason.
 6. **Constraints and edge cases** (optional) — limits, failure situations, and invariants that must not break. Implementation-level checks (identifiers, dependencies, APIs) belong here, not in the acceptance criteria.
@@ -68,6 +72,28 @@ Then these sections, in order. Omit an optional section when it is empty (no "n/
 ### `tasks.md`
 
 `# Tasks`, then groups (`### Group N: <name>`) of `- [ ]` implementation tasks, in order. Each group leaves the app runnable and notes which acceptance criteria it makes passable. No word cap, but keep groups small.
+
+## Dependencies and epics
+
+Two optional frontmatter fields relate tickets to each other. They are not the same thing as `modules`.
+
+**`depends_on`** — a list of ticket folder names that must be `done` before this ticket can be implemented.
+
+- Reference the folder name only, never a path. The name does not change when a ticket moves to `archived/`, so the link stays valid.
+- The order of work comes from `depends_on`. There is no `order` or number field.
+- Do not store the reverse ("blocks"). It is derived by looking for tickets that list this one.
+- It must point to a real ticket, and must not form a cycle. A dependency that is already `done` and archived is satisfied.
+- Planning (`tasks.md`) may happen before a dependency is done; implementation may not start until it is.
+
+**`epic`** — a slug naming the delivery effort the ticket belongs to, e.g. `thought-records`. An epic is an **event**, not a category.
+
+- An epic is a bounded piece of work with a start and an end, such as "ship thought records". It is **not** a module and **not** a grouping of old tickets or docs.
+- It never appears in `docs/specs/`. Specs are the current state, not a history of efforts.
+- An epic has no file or folder and no stored status. It is **open** while any ticket carrying its slug is still in `docs/changes/` (not yet archived), and **closed** once all of them are archived. Progress is read from the tickets.
+- A closed epic is never reopened or extended. Follow-up work gets a new epic (or none), and may cite the old one under Scope as related work.
+- After archiving, the `epic` field stays in the ticket's frontmatter as a record of the effort it belonged to.
+- `modules` says which spec docs a ticket changes; `epic` says which effort delivered it. One epic can touch many modules, and one module is touched by many epics.
+- Updating an active ticket in place never adds a new dependency or changes its epic. That is a sign it should be a new ticket.
 
 ## Ticket lifecycle
 

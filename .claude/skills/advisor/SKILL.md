@@ -31,11 +31,20 @@ When the idea extends something an existing ticket already covers, decide and re
 
 The user has the final say.
 
+## Dependencies and epics
+
+Follow "Dependencies and epics" in `.claude/rules/spec-conventions.md`.
+
+- When a discussion is big, propose the split together with its `depends_on` links and the order that follows from them.
+- Suggest an `epic` slug only when several tickets form one bounded delivery effort. Remember an epic is an event with an end, not a category or a module. Never attach new work to a closed epic (all its tickets archived); suggest a new epic instead.
+- Check that each dependency points to a real ticket in `docs/changes/` or `docs/changes/archived/` and that there is no cycle.
+- A change that would add a dependency or move a ticket to another epic is not an in-place update; recommend a new ticket.
+
 ## Ending the discussion
 
 The discussion is finished when the user **agrees to add a ticket** (or to update an active one). At that point:
 
-1. Summarize the agreed proposal: goal, decisions made, scope, affected modules (docs), open risks. For an update, name the ticket folder and what is being added or changed.
+1. Summarize the agreed proposal: goal, decisions made, scope, affected modules (docs), dependencies and epic (if any), open risks. For an update, name the ticket folder and what is being added or changed.
 2. Tell the user to run **/secretary** to turn this proposal into a ticket (or to amend the existing one).
 
 Do not create or edit the ticket yourself.
