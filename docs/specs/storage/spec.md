@@ -32,6 +32,7 @@ flowchart LR
 - **Every table must be registered for backup**, or a test fails (see [backup](../backup/spec.md)). A new version also means older backups need a conversion.
 - **An upgrade must never stop the app from opening.** The conversion never throws; a row it does not recognise is left exactly as it is, never deleted, and running it again changes nothing.
 - **The conversion is lossy and cannot be undone:** old ratings of 1 to 4 become 0 and 5 becomes 1. Exporting a backup first keeps the old ratings.
+- Two small device preferences, the time of the last backup and the reminder snooze, live in the browser's own storage, outside the database and outside backups (see [backup](../backup/spec.md)).
 - No user data leaves the device.
 - Clearing site data erases everything. Persistent storage lowers the risk of eviction but does not remove it.
 
