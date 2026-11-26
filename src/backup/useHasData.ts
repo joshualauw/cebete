@@ -4,11 +4,9 @@ import { db } from '@/db/db'
 
 async function countAnything(): Promise<boolean> {
   try {
-    const counts = await Promise.all([
-      db.moodEntries.count(),
-      db.thoughtRecords.count(),
-      db.copingItems.count(),
-    ])
+    // The coping library is left out: it starts with a few items of its own, so a brand-new user
+    // would look as if they had something to lose.
+    const counts = await Promise.all([db.moodEntries.count(), db.thoughtRecords.count()])
 
     return counts.some((count) => count > 0)
   } catch (error) {
@@ -20,7 +18,7 @@ async function countAnything(): Promise<boolean> {
 }
 
 /**
- * Whether the device holds any mood entry, thought record or coping item, kept up to date by
+ * Whether the device holds any mood entry or thought record, kept up to date by
  * itself. It is `undefined` until the first read finishes, so nothing flashes by mistake.
  */
 export function useHasData(): boolean | undefined {

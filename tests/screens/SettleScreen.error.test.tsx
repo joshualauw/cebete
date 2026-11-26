@@ -14,7 +14,7 @@ afterEach(() => {
 })
 
 describe('SettleScreen: when the user’s items cannot be loaded', () => {
-  it('still shows the built-in techniques, with a calm message', async () => {
+  it('shows only a calm message, with no technique of any kind', async () => {
     const report = vi.spyOn(console, 'error').mockImplementation(() => undefined)
 
     renderWithProviders(<SettleScreen />)
@@ -22,10 +22,23 @@ describe('SettleScreen: when the user’s items cannot be loaded', () => {
     const message = await screen.findByRole('status')
 
     expect(message).toHaveTextContent(/could not be loaded right now/i)
-    expect(message).toHaveTextContent(/built-in techniques are still here/i)
-    expect(screen.getByRole('heading', { level: 3, name: 'Slow breathing' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Edit my coping library' })).toBeInTheDocument()
+    expect(message).not.toHaveTextContent(/built-in/i)
+    expect(screen.queryAllByRole('heading', { level: 2 })).toHaveLength(0)
+    expect(screen.queryAllByRole('heading', { level: 3 })).toHaveLength(0)
+    expect(screen.queryByText(/slow breathing/i)).not.toBeInTheDocument()
     expect(report).toHaveBeenCalled()
+  })
+
+  it('keeps the way back and the way to the library, and the calm note', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined)
+
+    renderWithProviders(<SettleScreen />)
+
+    await screen.findByRole('status')
+
+    expect(screen.getByRole('link', { name: 'Back to home' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Edit my coping library' })).toBeInTheDocument()
+    expect(screen.getByText(/self-help tool/i)).toBeInTheDocument()
   })
 
   it('does not tell the user their library is empty, since that is not known', async () => {

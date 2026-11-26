@@ -1,9 +1,10 @@
-import { screen, within } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { STARTER_TECHNIQUES } from '@/coping/starters'
+import { addCopingItem } from '@/coping/repository'
 import { db } from '@/db/db'
 import SettleScreen from '@/screens/SettleScreen'
+import { copingItem } from '@tests/helpers/coping'
 import { renderWithProviders } from '@tests/helpers/render'
 
 beforeEach(async () => {
@@ -18,45 +19,50 @@ describe('SettleScreen', () => {
     expect(screen.getByRole('link', { name: 'Back to home' })).toHaveAttribute('href', '/')
   })
 
-  it('shows every built-in technique under Do, with its steps in order', () => {
+  it('needs no typing: it has no text fields and no forms', async () => {
+    await addCopingItem(copingItem('do', 'Slow breathing', '1. In for four'))
+
     renderWithProviders(<SettleScreen />)
 
-    expect(screen.getByRole('heading', { level: 2, name: 'Do' })).toBeInTheDocument()
-
-    for (const technique of STARTER_TECHNIQUES) {
-      const card = screen.getByRole('heading', { level: 3, name: technique.title }).closest('li')
-
-      if (!card) {
-        throw new Error(`No card for ${technique.title}`)
-      }
-
-      expect(
-        within(card)
-          .getAllByRole('listitem')
-          .map((step) => step.textContent),
-      ).toEqual([...technique.steps])
-    }
-  })
-
-  it('needs no typing: it has no text fields and no forms', () => {
-    renderWithProviders(<SettleScreen />)
+    await screen.findByText('Slow breathing')
 
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })
 
-  it('invites the user to add personal items once it is known the library is empty', async () => {
+  it('invites the user to add items once it is known the library is empty', async () => {
     renderWithProviders(<SettleScreen />)
 
     expect(await screen.findByText(/add the things that help you/i)).toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 3, name: 'Slow breathing' })).toBeInTheDocument()
   })
 
-  it('shows the built-in techniques at once, without waiting for the items, and without the prompt', () => {
+  it('shows no group and no technique of its own when the library is empty', async () => {
     renderWithProviders(<SettleScreen />)
 
-    expect(screen.getByRole('heading', { level: 3, name: 'Slow breathing' })).toBeInTheDocument()
+    await screen.findByText(/add the things that help you/i)
+
+    expect(screen.queryAllByRole('heading', { level: 2 })).toHaveLength(0)
+    expect(screen.queryAllByRole('heading', { level: 3 })).toHaveLength(0)
+    expect(screen.queryByText(/slow breathing/i)).not.toBeInTheDocument()
+  })
+
+  it('shows nothing of the library, and no prompt, until the items are read', () => {
+    renderWithProviders(<SettleScreen />)
+
     expect(screen.queryByText(/add the things that help you/i)).not.toBeInTheDocument()
+    expect(screen.queryAllByRole('heading', { level: 3 })).toHaveLength(0)
+  })
+
+  it('shows what is in the library, and nothing else, under Do', async () => {
+    await addCopingItem(copingItem('do', 'Slow breathing', '1. In for four\n2. Out for six'))
+
+    renderWithProviders(<SettleScreen />)
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'Do' })).toBeInTheDocument()
+    expect(
+      screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent),
+    ).toEqual(['Slow breathing'])
+    expect(screen.getByText(/1\. In for four/)).toBeInTheDocument()
   })
 
   it('opens the coping library from "Edit my coping library"', () => {

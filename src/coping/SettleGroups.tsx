@@ -1,7 +1,6 @@
 import { Box, Heading, Text } from '@chakra-ui/react'
 import type { ReactElement } from 'react'
 
-import StarterTechniques from './StarterTechniques'
 import { COPING_TYPES, type CopingItem, type CopingType } from './types'
 import type { CopingItemsState } from './useCopingItems'
 
@@ -22,7 +21,7 @@ function ItemCards({ items }: ItemCardsProps): ReactElement {
     <Box as="ul" display="flex" flexDirection="column" gap="3" listStyleType="none" m="0" p="0">
       {items.map((item) => (
         <Box key={item.id} as="li" bg="bg.muted" borderRadius="xl" p="4">
-          {/* The same look as a built-in technique: a green title, and the content indented. */}
+          {/* A green title, and the content indented. */}
           <Heading as="h3" size="md" color="colorPalette.fg" overflowWrap="anywhere">
             {item.text}
           </Heading>
@@ -42,19 +41,29 @@ type SettleGroupsProps = {
 }
 
 /**
- * Everything the quick-use screen offers: the built-in techniques first under Do, then the user's
- * own items by kind. The built-in techniques are always there, also while the items are loading
- * and when they cannot be loaded.
+ * Everything the quick-use screen offers: the user's library items, by kind. A group with
+ * nothing in it is left out. Nothing is shown while the items are loading, and if they cannot be
+ * loaded only a calm message is.
  */
-export default function SettleGroups({ state }: SettleGroupsProps): ReactElement {
-  const items = state.status === 'ready' ? state.items : []
+export default function SettleGroups({ state }: SettleGroupsProps): ReactElement | null {
+  if (state.status === 'loading') {
+    return null
+  }
+
+  if (state.status === 'error') {
+    return (
+      <Box role="status" bg="bg.muted" borderRadius="xl" p="4">
+        Your items could not be loaded right now.
+      </Box>
+    )
+  }
 
   return (
     <Box display="flex" flexDirection="column" gap="6">
       {COPING_TYPES.map((type) => {
-        const group = items.filter((item) => item.type === type)
+        const group = state.items.filter((item) => item.type === type)
 
-        if (type !== 'do' && group.length === 0) {
+        if (group.length === 0) {
           return null
         }
 
@@ -63,16 +72,7 @@ export default function SettleGroups({ state }: SettleGroupsProps): ReactElement
             <Heading as="h2" id={`settle-group-${type}`} size="lg" color="colorPalette.fg" mb="3">
               {GROUP_LABELS[type]}
             </Heading>
-            <Box display="flex" flexDirection="column" gap="3">
-              {type === 'do' ? <StarterTechniques /> : null}
-              {group.length === 0 ? null : <ItemCards items={group} />}
-              {type === 'do' && state.status === 'error' ? (
-                <Box role="status" bg="bg.muted" borderRadius="xl" p="4">
-                  Your own items could not be loaded right now. The built-in techniques are still
-                  here.
-                </Box>
-              ) : null}
-            </Box>
+            <ItemCards items={group} />
           </Box>
         )
       })}

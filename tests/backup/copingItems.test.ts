@@ -4,6 +4,7 @@ import { createBackup, serializeBackup } from '@/backup/export'
 import { parseBackup } from '@/backup/parse'
 import { restoreBackup } from '@/backup/restore'
 import { addCopingItem, listCopingItems } from '@/coping/repository'
+import { starterItems } from '@/coping/starters'
 import { db } from '@/db/db'
 import { addMoodEntry } from '@/mood/repository'
 import { backupText, currentEntry, currentTables } from '@tests/helpers/backup'
@@ -68,6 +69,60 @@ describe('backing up the coping library', () => {
     const added = await addCopingItem(copingItem('do', 'Breathe'))
 
     expect(added.id).toBeGreaterThan(5)
+  })
+})
+
+describe('backing up the starter techniques', () => {
+  it('keeps the starters and the user’s edits to them exactly, after a backup and restore', async () => {
+    await db.copingItems.bulkAdd([...starterItems()])
+    const [first] = await db.copingItems.orderBy('id').toArray()
+
+    if (!first) {
+      throw new Error('The starters were not added')
+    }
+    await db.copingItems.put({ ...first, text: 'My own breathing' })
+    const original = await db.copingItems.orderBy('id').toArray()
+    const text = serializeBackup(await createBackup())
+
+    await db.copingItems.clear()
+    await restoreBackup(parseBackup(text))
+
+    expect(await db.copingItems.orderBy('id').toArray()).toEqual(original)
+    expect(original).toHaveLength(3)
+  })
+
+  it('restores a backup that holds none of them without bringing them back', async () => {
+    await db.copingItems.bulkAdd([...starterItems()])
+
+    await restoreBackup(parseBackup(backupText({ tables: currentTables([], [], []) })))
+
+    expect(await db.copingItems.count()).toBe(0)
+  })
+
+  it('restores a backup in which the user deleted a starter without bringing it back', async () => {
+    await db.copingItems.bulkAdd([...starterItems()])
+    const [first] = await db.copingItems.orderBy('id').toArray()
+
+    if (!first) {
+      throw new Error('The starters were not added')
+    }
+    await db.copingItems.delete(first.id)
+    const text = serializeBackup(await createBackup())
+
+    await db.copingItems.clear()
+    await db.copingItems.bulkAdd([...starterItems()])
+    await restoreBackup(parseBackup(text))
+
+    expect((await db.copingItems.toArray()).map((item) => item.text)).toEqual([
+      'Grounding: 5, 4, 3, 2, 1',
+      'Muscle relaxation',
+    ])
+  })
+
+  it('counts them like any other item in a backup', async () => {
+    await db.copingItems.bulkAdd([...starterItems()])
+
+    expect((await createBackup()).counts.copingItems).toBe(3)
   })
 })
 

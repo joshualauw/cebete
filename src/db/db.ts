@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable, type Transaction } from 'dexie'
 
+import { starterItems } from '@/coping/starters'
 import type { CopingItem } from '@/coping/types'
 import { convertLegacyEntry } from '@/mood/migration'
 import type { MoodEntry } from '@/mood/types'
@@ -64,6 +65,12 @@ export class CebeteDb extends Dexie {
       [MOOD_ENTRIES]: '++id, createdAt',
       [THOUGHT_RECORDS]: '++id, createdAt',
       [COPING_ITEMS]: '++id',
+    })
+
+    // A brand-new library starts with a few techniques to hand. This runs only when the database
+    // is created, never on an upgrade, so what the user edits or deletes stays that way.
+    this.on('populate', async (transaction) => {
+      await transaction.table(COPING_ITEMS).bulkAdd([...starterItems()])
     })
   }
 }

@@ -60,11 +60,8 @@ describe('BackupReminder: when it is shown', () => {
     )
   })
 
-  it.each([
-    ['a mood entry', async () => addMoodEntry(oneEmotion('calm', 4))],
-    ['a coping item', async () => addCopingItem(copingItem('do', 'Walk'))],
-  ])('counts %s as data worth backing up', async (_label, add) => {
-    await add()
+  it('counts a mood entry as data worth backing up', async () => {
+    await addMoodEntry(oneEmotion('calm', 4))
 
     renderWithProviders(<BackupReminder />)
 
@@ -92,6 +89,43 @@ describe('BackupReminder: when it is shown', () => {
     await screen.findByRole('region', { name: 'Backup reminder' })
 
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+})
+
+describe('BackupReminder: the coping library does not count', () => {
+  it('does not nag a new user whose library holds only items of its own', async () => {
+    await addCopingItem(copingItem('do', 'Slow breathing'))
+    await addCopingItem(copingItem('say', 'This will pass'))
+
+    renderWithProviders(<BackupReminder />)
+    await settle()
+
+    expect(reminder()).not.toBeInTheDocument()
+  })
+
+  it('still shows it once there is a mood entry or a thought record next to a library', async () => {
+    await addCopingItem(copingItem('do', 'Slow breathing'))
+    await withData()
+
+    renderWithProviders(<BackupReminder />)
+
+    expect(await screen.findByRole('region', { name: 'Backup reminder' })).toBeInTheDocument()
+  })
+
+  it('shows it for a thought record next to a library, and not for the library alone', async () => {
+    await addCopingItem(copingItem('do', 'Slow breathing'))
+    renderWithProviders(<BackupReminder />)
+    await settle()
+    expect(reminder()).not.toBeInTheDocument()
+
+    await db.thoughtRecords.add({
+      emotions: [{ emotion: 'sad', intensity: 6 }],
+      thought: 'a thought',
+      belief: 5,
+      createdAt: 1,
+    })
+
+    expect(await screen.findByRole('region', { name: 'Backup reminder' })).toBeInTheDocument()
   })
 })
 

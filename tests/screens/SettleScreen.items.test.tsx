@@ -15,23 +15,18 @@ function headings(): (string | null)[] {
   return screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent)
 }
 
-describe('SettleScreen: your own items look like the built-in techniques', () => {
-  it('gives an item the same card and title as a built-in technique, with its detail inside', async () => {
+describe('SettleScreen: every item has one look', () => {
+  it('gives an item a card with a green title and its detail inside', async () => {
     await addCopingItem(copingItem('do', 'Long walk', 'Round the park'))
 
     renderWithProviders(<SettleScreen />)
 
-    const own = await screen.findByRole('heading', { level: 3, name: 'Long walk' })
-    const builtIn = screen.getByRole('heading', { level: 3, name: 'Slow breathing' })
+    const title = await screen.findByRole('heading', { level: 3, name: 'Long walk' })
 
-    // The same style properties give the same generated classes, so equal classes mean the
-    // same look: the green title, and the same card around it.
-    expect(own.className).toBe(builtIn.className)
-    expect(own.closest('li')?.className).toBe(builtIn.closest('li')?.className)
-    expect(own.closest('li')).toHaveTextContent('Round the park')
+    expect(title.closest('li')).toHaveTextContent('Round the park')
   })
 
-  it('gives every kind of item the same title size as a built-in technique, Tell myself included', async () => {
+  it('gives every kind of item the same title size and card, Tell myself included', async () => {
     await addCopingItem(copingItem('do', 'Long walk'))
     await addCopingItem(copingItem('nearby', 'Photo of my sister'))
     await addCopingItem(copingItem('say', 'This will pass'))
@@ -41,13 +36,14 @@ describe('SettleScreen: your own items look like the built-in techniques', () =>
 
     await screen.findByText('Good listener')
 
-    const builtIn = screen.getByRole('heading', { level: 3, name: 'Slow breathing' })
+    const first = screen.getByRole('heading', { level: 3, name: 'Long walk' })
 
-    for (const title of ['Long walk', 'Photo of my sister', 'This will pass', 'Good listener']) {
-      // Equal generated classes mean equal style properties, so the same size.
-      expect(screen.getByRole('heading', { level: 3, name: title }).className).toBe(
-        builtIn.className,
-      )
+    for (const title of ['Photo of my sister', 'This will pass', 'Good listener']) {
+      const heading = screen.getByRole('heading', { level: 3, name: title })
+
+      // Equal generated classes mean equal style properties, so the same size and the same card.
+      expect(heading.className).toBe(first.className)
+      expect(heading.closest('li')?.className).toBe(first.closest('li')?.className)
     }
   })
 
@@ -112,18 +108,16 @@ describe('SettleScreen: the user’s own items', () => {
     ).toBeInTheDocument()
   })
 
-  it('puts the built-in techniques before the user’s own actions under Do', async () => {
-    await addCopingItem(copingItem('do', 'Long walk'))
+  it('lists the actions under Do in the order they were added', async () => {
+    await addCopingItem(copingItem('do', 'First'))
+    await addCopingItem(copingItem('do', 'Second'))
 
     renderWithProviders(<SettleScreen />)
 
-    const own = await screen.findByText('Long walk')
-    const builtIn = screen.getByRole('heading', { level: 3, name: 'Slow breathing' })
+    const rows = within(await screen.findByRole('region', { name: 'Do' })).getAllByRole('listitem')
 
-    expect(builtIn.compareDocumentPosition(own) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(
-      within(screen.getByRole('region', { name: 'Do' })).getByText('Long walk'),
-    ).toBeInTheDocument()
+    expect(rows[0]).toHaveTextContent('First')
+    expect(rows[1]).toHaveTextContent('Second')
   })
 
   it('shows an item’s detail as its steps, and leaves out the groups with nothing in them', async () => {
@@ -135,19 +129,15 @@ describe('SettleScreen: the user’s own items', () => {
     expect(headings()).toEqual(['Do'])
   })
 
-  it('keeps the built-in techniques first even when the user has added none of their own actions', async () => {
+  it('shows no Do group when the user has no action, since nothing holds it open', async () => {
     await addCopingItem(copingItem('say', 'This will pass'))
 
     renderWithProviders(<SettleScreen />)
 
     await screen.findByText('This will pass')
 
-    expect(
-      within(screen.getByRole('region', { name: 'Do' })).getByRole('heading', {
-        level: 3,
-        name: 'Slow breathing',
-      }),
-    ).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Do' })).not.toBeInTheDocument()
+    expect(headings()).toEqual(['Tell myself'])
   })
 
   it('does not show the prompt to add items once the user has some', async () => {

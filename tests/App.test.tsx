@@ -63,6 +63,8 @@ describe('App sections', () => {
   })
 
   it('opens straight onto the coping library, with Home still highlighted in the bar', async () => {
+    // A new library starts with its starter items, and this test looks at an empty one.
+    await db.copingItems.clear()
     renderAppAt('/coping')
 
     expect(screen.getByRole('heading', { level: 1, name: 'Coping library' })).toBeInTheDocument()

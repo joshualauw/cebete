@@ -8,6 +8,8 @@ import { oneEmotion } from '@tests/helpers/mood'
 
 beforeEach(async () => {
   await db.moodEntries.clear()
+  // A new library starts with its starter items, and these tests count an empty one.
+  await db.copingItems.clear()
 })
 
 describe('createBackup', () => {

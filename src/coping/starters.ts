@@ -1,13 +1,16 @@
-/** A technique that comes with the app. It is fixed: it is not stored, edited or backed up. */
-export type StarterTechnique = {
-  readonly id: string
+import type { NewCopingItem } from './types'
+
+/**
+ * A technique every new library starts with. This is only the source of the first three items:
+ * once they are added, they are ordinary library items that the user can edit or delete.
+ */
+type StarterTechnique = {
   readonly title: string
   readonly steps: readonly string[]
 }
 
 export const STARTER_TECHNIQUES: readonly StarterTechnique[] = [
   {
-    id: 'slow-breathing',
     title: 'Slow breathing',
     steps: [
       'Sit or stand somewhere comfortable and let your shoulders drop.',
@@ -17,7 +20,6 @@ export const STARTER_TECHNIQUES: readonly StarterTechnique[] = [
     ],
   },
   {
-    id: 'grounding',
     title: 'Grounding: 5, 4, 3, 2, 1',
     steps: [
       'Look around and name five things you can see.',
@@ -28,7 +30,6 @@ export const STARTER_TECHNIQUES: readonly StarterTechnique[] = [
     ],
   },
   {
-    id: 'muscle-relaxation',
     title: 'Muscle relaxation',
     steps: [
       'Squeeze both fists tight, count to five, then let go.',
@@ -39,3 +40,15 @@ export const STARTER_TECHNIQUES: readonly StarterTechnique[] = [
     ],
   },
 ]
+
+/**
+ * The items a new library starts with, in this order: "Do" items, each with the technique's name
+ * as its text and its steps, numbered, one to a line as its detail.
+ */
+export function starterItems(): readonly NewCopingItem[] {
+  return STARTER_TECHNIQUES.map(({ title, steps }) => ({
+    type: 'do',
+    text: title,
+    detail: steps.map((step, index) => `${String(index + 1)}. ${step}`).join('\n'),
+  }))
+}
