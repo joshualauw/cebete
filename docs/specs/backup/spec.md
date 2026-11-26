@@ -29,7 +29,7 @@ flowchart TD
 - **Older backups:** a backup from an earlier data version is brought up to date as it is read, with the same conversion as the database upgrade (see [storage](../storage/spec.md)). Records made before challenges, tests or body notes existed restore without them, and challenges and results saved before they were dated restore undated, and a backup made before the coping library existed restores with an empty library.
 - **Replace:** every backed-up table is cleared and refilled with the backup's rows, ids included, in a single database transaction.
 - **Last backup:** the Backup section says "Last backup:" with the day, "Never backed up", or "Last backup: unknown" when the browser cannot say. The time is remembered only when an export succeeds. A failed export and a restore leave it unchanged.
-- **The reminder:** Home shows a calm one-line reminder, below the settle card, when the user has data (a mood entry, thought record or coping item) and the last backup is missing or more than 14 days old. "Back up now" opens Settings, and "Not now" hides it for 7 days and moves focus to the page heading. It is never a pop-up, never blocks anything, and sends no notification.
+- **The reminder:** Home shows a calm one-line reminder, below the settle card, when the user has data (a mood entry or a thought record; the coping library does not count, since a new one starts with its own starter items) and the last backup is missing or more than 14 days old. "Back up now" opens Settings, and "Not now" hides it for 7 days and moves focus to the page heading. It is never a pop-up, never blocks anything, and sends no notification.
 
 ## Data and files
 
@@ -45,7 +45,7 @@ flowchart TD
 - **Every table must be registered.** A future module that stores data must join the registry, or a test fails.
 - A backup from a newer version is never read, so an old app cannot damage data it does not understand.
 - Backup files hold private data in plain text; the user must store them carefully.
-- **A new user is not nagged:** with nothing stored, there is nothing to lose, so no reminder shows.
+- **A new user is not nagged:** with no mood entry or thought record, there is nothing of their own to lose, so no reminder shows, even though the library holds its starter items. A user with only a coping library is not reminded until they log something.
 - **Blocked storage:** if the browser blocks its storage, the app still works. The last backup shows as unknown, and the reminder stays hidden rather than appear on every visit.
 - The reminder judges the time once, when Home opens, so a page left open for days is not re-checked.
 - Picking the same file twice in a row works.

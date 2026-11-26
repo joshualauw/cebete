@@ -1,13 +1,13 @@
 ## Summary
 
-Coping is cebete's personal library of things that help the user cope: something to do, something to keep nearby, calming words, and true things about themselves. It is built while calm, so it is to hand when worry rises. It is managed on its own screen, reached from the "Need to settle?" screen, and is kept only on the device. That quick screen, entered from Home, shows the library next to a few built-in techniques, so it helps even before the user has added anything. It does not cover guided animations or timers, photos or files, intensity or tags, or links from thought records or body areas.
+Coping is cebete's personal library of things that help the user cope: something to do, something to keep nearby, calming words, and true things about themselves. It is built while calm, so it is to hand when worry rises. It is managed on its own screen, reached from the "Need to settle?" screen, and is kept only on the device. That quick screen, entered from Home, shows the library. A new library starts with three starter techniques, so it helps from the first day. It does not cover guided animations or timers, photos or files, intensity or tags, or links from thought records or body areas.
 
 ## How it works
 
 ```mermaid
 flowchart TD
     A[User opens Home] --> S[Need to settle? card]
-    S --> T[Quick-use screen: built-in techniques and the user's items]
+    S --> T[Quick-use screen: the library's items]
     T --> B[Edit my coping library]
     B --> C{Items loaded?}
     C -- loading --> D[Nothing shown yet]
@@ -36,18 +36,18 @@ flowchart TD
 - **Deleting:** Delete asks "Delete this item? This cannot be undone." inside the item, with Keep focused first. Afterwards a polite announcement says how many items are left and focus moves to the list.
 - **One flow at a time:** while the add form, an edit form or the delete question is open, the other actions are switched off, so typed work is never lost silently.
 - **The quick-use screen:** built for a hard moment, with no typing and no editing. It shows, in order:
-  - **Do:** the built-in techniques first, each with numbered steps, then the user's own actions with their detail.
+  - **Do:** the user's actions with their detail, the starter techniques among them until the user changes or deletes them.
   - **Keep nearby:** the user's items, with detail.
   - **Tell myself:** the user's calming words.
   - **Remember:** the user's About me items, named for what they are in this moment: reminders.
 
-  The user's own items look like the built-in techniques in every group: a green title at the same size, with the detail indented beneath it. A group with nothing in it is left out, except Do, which always has the built-in techniques. While the items load the techniques are already shown. Once it is known the library is empty, a gentle prompt invites the user to add items, and a link opens the library. A short calm note says cebete is a self-help tool and not a substitute for professional care or emergency help. The screen follows the library live.
+  Every item looks the same in every group: a green title at the same size, with the detail indented beneath it. A group with nothing in it is left out, and nothing is shown while the items load. Once it is known the library is empty, a gentle prompt invites the user to add items, and a link opens the library. A short calm note says cebete is a self-help tool and not a substitute for professional care or emergency help. The screen follows the library live.
 
 ## Data and files
 
 - **Item:** an id, a kind (one of four), a short text, and an optional detail. It lives in the `copingItems` table, ordered by id (see [storage](../storage/spec.md)). The kinds are text only; there are no per-kind fields.
-- **Built-in techniques:** slow breathing, grounding (5, 4, 3, 2, 1) and muscle relaxation, each a title and a few plain steps. They are fixed data in code: not stored in the database, not editable, and not part of backups.
-- **Code:** `src/coping/` holds the types and labels, validation, reading and writing, a live-query hook, the form, the kind picker, the list and the item row, and for the quick-use screen the built-in techniques and the grouped view. `src/screens/CopingScreen.tsx` is the library and `src/screens/SettleScreen.tsx` the quick-use screen. The delete question is the shared control in `src/shared/`, also used by [thoughts](../thoughts/spec.md). Tests are in `tests/coping/`, `tests/screens/` and `tests/backup/`.
+- **Starter techniques:** a new library starts with three "Do" items: slow breathing, grounding (5, 4, 3, 2, 1) and muscle relaxation, each with its numbered steps as the detail. They are added once, when the database is first created (see [storage](../storage/spec.md)), and are ordinary items from then on: editable, deletable, in every backup, and never added again. An existing database is not seeded.
+- **Code:** `src/coping/` holds the types and labels, validation, reading and writing, a live-query hook, the form, the kind picker, the list and the item row, the starter techniques a new library begins with, and the grouped view of the quick-use screen. `src/screens/CopingScreen.tsx` is the library and `src/screens/SettleScreen.tsx` the quick-use screen. The delete question is the shared control in `src/shared/`, also used by [thoughts](../thoughts/spec.md). Tests are in `tests/coping/`, `tests/screens/` and `tests/backup/`.
 - **Backup:** items are part of every backup (see [backup](../backup/spec.md)).
 
 ## Rules and edge cases
@@ -57,13 +57,14 @@ flowchart TD
 - **An item that is gone:** if an item is deleted while its form is open and Save is pressed, the form says so and offers only Cancel; nothing is recreated. An item that vanishes from the list closes its form.
 - **Unreadable rows:** a damaged item is left out of the list, never deleted, and reported once in the console.
 - **Accessibility:** forms and headings take focus on opening, closing returns focus to the opener, results such as "Item saved.", "Item updated." and "Item deleted." are announced politely, the kind picker uses real radio buttons, and every control is at least 48 px tall.
-- **Quick-use failures:** if the items cannot be read, the built-in techniques still show with a calm message, and the screen does not claim the library is empty.
+- **Quick-use failures:** if the items cannot be read, only a calm message is shown in place of the groups, and the screen does not claim the library is empty.
+- **The starters are not special:** deleting all of them leaves an empty library with the gentle prompt. A restore replaces the library with the backup's contents, so a backup without them restores without them.
 - **No crisis line:** the calm note names none, because the right one depends on the user's country.
 - Items are private and stay on the device; backups are plain and unencrypted. Everything works offline.
 
 ## Related
 
-- [app-shell](../app-shell/spec.md): the Home card and link, the addresses, and how Home stays current in the bar.
+- [app-shell](../app-shell/spec.md): the Home card, the addresses, and how Home stays current in the bar.
 - [storage](../storage/spec.md): the table that holds the items.
 - [backup](../backup/spec.md): includes the items in every backup.
 - [thoughts](../thoughts/spec.md): shares the delete question control.

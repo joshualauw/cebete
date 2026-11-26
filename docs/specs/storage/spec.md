@@ -17,6 +17,7 @@ flowchart LR
 - **Startup:** the app opens the database and asks the browser to keep the data instead of evicting it under storage pressure. This runs alongside rendering and never delays the first screen.
 - **Refusal is fine:** if the browser refuses, does not support the request, or it fails, the app carries on. The request repeats at each start until granted.
 - **Growing the schema:** a feature module adds tables by declaring a new schema version, and Dexie migrates existing data.
+- **Starter items:** when the database is first created, the coping library is filled once with three starter techniques (see [coping](../coping/spec.md)). This runs only at creation, never when an existing database opens or upgrades, so nothing the user edits or deletes comes back. A database created again, for example after the site's data was cleared, is seeded again.
 - **Upgrading entries:** going from version 2 to 3 converts each mood entry with one emotion rated 0 to 100 into one rated 0 to 10 (divided by 10, rounded, kept within range). Id, note and time are kept.
 - **Failure to open:** the error is reported to the console and the app still renders.
 
