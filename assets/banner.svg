@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" width="1200" height="320">
+  <title>cebete</title>
+  <rect width="1200" height="320" fill="#0f766e"/>
+  <g transform="translate(96 72) scale(0.34375)">
+    <rect width="512" height="512" rx="112" fill="#f0fdfa"/>
+    <path d="M 347.93 333.13 A 120 120 0 1 1 347.93 178.87" fill="none" stroke="#0f766e" stroke-width="44" stroke-linecap="round"/>
+    <circle cx="376" cy="256" r="24" fill="#0f766e"/>
+  </g>
+  <g>
+    <path d="M 428.71 216.28 A 44 44 0 1 1 428.71 159.72" fill="none" stroke="#f0fdfa" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 485 188 H 573 A 44 44 0 1 0 562.71 216.28" fill="none" stroke="#f0fdfa" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 619 95 V 188" fill="none" stroke="#f0fdfa" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="663" cy="188" r="44" fill="none" stroke="#f0fdfa" stroke-width="22"/>
+    <path d="M 753 188 H 841 A 44 44 0 1 0 830.71 216.28" fill="none" stroke="#f0fdfa" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 921 105 V 192 A 40 40 0 0 0 961 232" fill="none" stroke="#f0fdfa" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 887 144 H 961" fill="none" stroke="#f0fdfa" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 1007 188 H 1095 A 44 44 0 1 0 1084.71 216.28" fill="none" stroke="#f0fdfa" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
