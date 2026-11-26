@@ -2,10 +2,10 @@
 title: Home summary
 type: feat
 priority: medium
-status: todo
+status: done
 date: 2026-11-25
 modules: [insights, app-shell, mood-log, thoughts]
-synced: false
+synced: true
 epic: first-release
 ---
 
@@ -57,9 +57,9 @@ The panel follows the data by itself as entries change. Wording stays neutral: i
 
 ## Acceptance Criteria
 
-- [ ] When the user opens Home, a summary panel with a 7 / 30 day toggle is shown, starting on 7 days.
-- [ ] When the range holds entries and records, the header shows how many of each there are.
-- [ ] When the range holds feelings, the most frequent emotions are shown as bars with their counts, most frequent first.
-- [ ] When the user switches to 30 days, the header and bars update to that range.
-- [ ] When the range holds nothing, a kind "not enough yet" message is shown.
-- [ ] When the user adds an entry, the panel updates without reopening Home.
+- [x] When the user opens Home, a summary panel with a 7 / 30 day toggle is shown, starting on 7 days.
+- [x] When the range holds entries and records, the header shows how many of each there are.
+- [x] When the range holds feelings, the most frequent emotions are shown as bars with their counts, most frequent first.
+- [x] When the user switches to 30 days, the header and bars update to that range.
+- [x] When the range holds nothing, a kind "not enough yet" message is shown.
+- [x] When the user adds an entry, the panel updates without reopening Home.

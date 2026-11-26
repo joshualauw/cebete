@@ -2,10 +2,10 @@
 title: Home quick actions
 type: feat
 priority: medium
-status: todo
+status: done
 date: 2026-11-25
 modules: [app-shell, mood-log, thoughts]
-synced: false
+synced: true
 epic: first-release
 ---
 
@@ -50,8 +50,8 @@ In both cases the section is shown as usual, with the form on top. Cancelling cl
 
 ## Acceptance Criteria
 
-- [ ] When the user opens Home, "Log how I feel" and "Write down a thought" are shown below the settle card.
-- [ ] When the user taps "Log how I feel", the Mood section opens with the new-entry form ready.
-- [ ] When the user taps "Write down a thought", the Thoughts section opens with the guided capture ready.
-- [ ] When the user cancels the opened form, they stay in that section and see its list.
-- [ ] When the user reloads the page after a quick action, the form is not opened again.
+- [x] When the user opens Home, "Log how I feel" and "Write down a thought" are shown below the settle card.
+- [x] When the user taps "Log how I feel", the Mood section opens with the new-entry form ready.
+- [x] When the user taps "Write down a thought", the Thoughts section opens with the guided capture ready.
+- [x] When the user cancels the opened form, they stay in that section and see its list.
+- [x] When the user reloads the page after a quick action, the form is not opened again.

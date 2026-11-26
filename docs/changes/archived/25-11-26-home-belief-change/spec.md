@@ -2,10 +2,10 @@
 title: Home belief change
 type: feat
 priority: medium
-status: todo
+status: done
 date: 2026-11-25
 modules: [insights, thoughts]
-synced: false
+synced: true
 depends_on: [25-11-26-home-summary, 25-11-26-challenge-and-test-dates]
 epic: first-release
 ---
@@ -54,10 +54,10 @@ A challenge compares the record's original belief with the belief after the chal
 
 ## Acceptance Criteria
 
-- [ ] When the user has challenged thoughts in the range, "Challenged thoughts" shows their count.
-- [ ] When three or more are in the range, the average belief from before to after is shown.
-- [ ] When fewer than three are in the range, each thought is listed with its belief before and after.
-- [ ] When the user has tested thoughts with a result in the range, "Tested thoughts" shows them the same way.
-- [ ] When the user switches between 7 and 30 days, both blocks update.
-- [ ] When a belief went up, it is shown as plainly as a drop.
-- [ ] When nothing falls in the range, each block says so calmly.
+- [x] When the user has challenged thoughts in the range, "Challenged thoughts" shows their count.
+- [x] When three or more are in the range, the average belief from before to after is shown.
+- [x] When fewer than three are in the range, each thought is listed with its belief before and after.
+- [x] When the user has tested thoughts with a result in the range, "Tested thoughts" shows them the same way.
+- [x] When the user switches between 7 and 30 days, both blocks update.
+- [x] When a belief went up, it is shown as plainly as a drop.
+- [x] When nothing falls in the range, each block says so calmly.

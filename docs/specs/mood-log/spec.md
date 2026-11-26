@@ -22,7 +22,7 @@ flowchart TD
 ```
 
 - **The list:** newest first by the entry's time, updating by itself when stored data changes. Each entry shows every emotion with its rating out of 10, the note if any, and the time. While the first read is under way nothing is shown, so the empty state never flashes. If entries cannot be loaded, a muted message appears and the rest of the screen keeps working.
-- **Adding:** "Add entry" opens the form.
+- **Adding:** "Add entry" opens the form. The "Log how I feel" quick action on Home opens Mood with the form already open (see [app-shell](../app-shell/spec.md)); Cancel then leaves the user on Mood with the list.
   - The user taps up to three emotions (tap again to remove). At three, the others fade and a calm message says that is the most.
   - Each chosen emotion gets a 0 to 10 slider starting at 5. Removing an emotion drops its rating.
   - An optional note has a length counter. A "Date and time" picker starts at the current moment; left alone, the entry is stamped with the moment it is saved, otherwise with the chosen time.
@@ -53,3 +53,4 @@ flowchart TD
 - [storage](../storage/spec.md): the table that holds the entries, and how older entries are upgraded.
 - [app-shell](../app-shell/spec.md): the Mood section, the theme and the bottom bar.
 - [thoughts](../thoughts/spec.md): reuses the emotion picker, sliders and checks.
+- [insights](../insights/spec.md): counts the entries and their emotions in the Home summary.
