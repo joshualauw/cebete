@@ -34,6 +34,12 @@ Other commands:
 - `npm run build` makes the production build, and `npm run preview` serves it.
 - `npm run typecheck`, `npm run format`, `npm run lint`, `npm run build` and `npm test` are the five checks, run in that order.
 
+## Inspired by
+
+_CBT Toolbox for Children & Adolescents: Over 200 Worksheets & Exercises for Trauma, ADHD, Autism, Anxiety, Depression & Conduct Disorders_, by Lisa Weed Phifer, Amanda K. Crowder, Tracy Elsenraat and Robert Hull.
+
+cebete is an independent project. It is not affiliated with or endorsed by the authors or the publisher.
+
 ## Licence
 
 MIT. See the [LICENSE](LICENSE) file.
