@@ -9,7 +9,7 @@ export default function StarterTechniques(): ReactElement {
     <Box as="ul" display="flex" flexDirection="column" gap="3" listStyleType="none" m="0" p="0">
       {STARTER_TECHNIQUES.map((technique) => (
         <Box key={technique.id} as="li" bg="bg.muted" borderRadius="xl" p="4">
-          <Heading as="h3" size="md" color="colorPalette.fg">
+          <Heading as="h3" size="md" color="colorPalette.fg" overflowWrap="anywhere">
             {technique.title}
           </Heading>
           <Box as="ol" mt="2" ps="5" display="flex" flexDirection="column" gap="1">

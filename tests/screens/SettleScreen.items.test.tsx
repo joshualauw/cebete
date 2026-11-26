@@ -15,6 +15,79 @@ function headings(): (string | null)[] {
   return screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent)
 }
 
+describe('SettleScreen: your own items look like the built-in techniques', () => {
+  it('gives an item the same card and title as a built-in technique, with its detail inside', async () => {
+    await addCopingItem(copingItem('do', 'Long walk', 'Round the park'))
+
+    renderWithProviders(<SettleScreen />)
+
+    const own = await screen.findByRole('heading', { level: 3, name: 'Long walk' })
+    const builtIn = screen.getByRole('heading', { level: 3, name: 'Slow breathing' })
+
+    // The same style properties give the same generated classes, so equal classes mean the
+    // same look: the green title, and the same card around it.
+    expect(own.className).toBe(builtIn.className)
+    expect(own.closest('li')?.className).toBe(builtIn.closest('li')?.className)
+    expect(own.closest('li')).toHaveTextContent('Round the park')
+  })
+
+  it('gives every kind of item the same title size as a built-in technique, Tell myself included', async () => {
+    await addCopingItem(copingItem('do', 'Long walk'))
+    await addCopingItem(copingItem('nearby', 'Photo of my sister'))
+    await addCopingItem(copingItem('say', 'This will pass'))
+    await addCopingItem(copingItem('about', 'Good listener'))
+
+    renderWithProviders(<SettleScreen />)
+
+    await screen.findByText('Good listener')
+
+    const builtIn = screen.getByRole('heading', { level: 3, name: 'Slow breathing' })
+
+    for (const title of ['Long walk', 'Photo of my sister', 'This will pass', 'Good listener']) {
+      // Equal generated classes mean equal style properties, so the same size.
+      expect(screen.getByRole('heading', { level: 3, name: title }).className).toBe(
+        builtIn.className,
+      )
+    }
+  })
+
+  it('gives every kind of item a title heading, in its own group', async () => {
+    await addCopingItem(copingItem('nearby', 'Photo of my sister'))
+    await addCopingItem(copingItem('say', 'This will pass'))
+    await addCopingItem(copingItem('about', 'Good listener'))
+
+    renderWithProviders(<SettleScreen />)
+
+    await screen.findByText('Good listener')
+
+    for (const [group, title] of [
+      ['Keep nearby', 'Photo of my sister'],
+      ['Tell myself', 'This will pass'],
+      ['Remember', 'Good listener'],
+    ] as const) {
+      expect(
+        within(screen.getByRole('region', { name: group })).getByRole('heading', {
+          level: 3,
+          name: title,
+        }),
+      ).toBeInTheDocument()
+    }
+  })
+
+  it('keeps the detail of an item in the same card, after its title, whatever its length', async () => {
+    await addCopingItem(copingItem('do', 'Box breathing', 'In for 4\nHold for 4\nOut for 4'))
+
+    renderWithProviders(<SettleScreen />)
+
+    const card = (await screen.findByRole('heading', { level: 3, name: 'Box breathing' })).closest(
+      'li',
+    )
+
+    expect(card).toHaveTextContent('In for 4')
+    expect(card).toHaveTextContent('Out for 4')
+  })
+})
+
 describe('SettleScreen: the user’s own items', () => {
   it('shows them in four groups, in a fixed order, with About me labelled Remember', async () => {
     await addCopingItem(copingItem('about', 'Good listener'))

@@ -20,11 +20,11 @@ function editButton(text: string): HTMLElement {
 }
 
 describe('CopingScreen: the list', () => {
-  it('has the Coping library heading, and a way back to Home', async () => {
+  it('has the Coping library heading, and leaves going back to the browser or phone back button', async () => {
     renderWithProviders(<CopingScreen />)
 
     expect(screen.getByRole('heading', { level: 1, name: 'Coping library' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Back to home' })).toHaveAttribute('href', '/')
+    expect(screen.queryByRole('link', { name: 'Back to home' })).not.toBeInTheDocument()
     expect(await screen.findByText(/no items yet/i)).toBeInTheDocument()
   })
 

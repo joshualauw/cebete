@@ -1,6 +1,6 @@
 import { Button, chakra, Container, Flex, Heading, Stack, Text } from '@chakra-ui/react'
 import { type ReactElement, useId, useRef } from 'react'
-import { LuHeart, LuMessageCircle, LuSmile } from 'react-icons/lu'
+import { LuMessageCircle, LuSmile } from 'react-icons/lu'
 import { Link } from 'react-router'
 
 import BackupReminder from '@/backup/BackupReminder'
@@ -79,12 +79,6 @@ export default function HomeScreen(): ReactElement {
           }}
         />
         <HomeSummary />
-        <Button asChild variant="outline" size="lg" minH="12" width="full">
-          <Link to={paths.coping}>
-            <LuHeart aria-hidden="true" />
-            My coping library
-          </Link>
-        </Button>
       </Stack>
     </Container>
   )

@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { db } from '@/db/db'
@@ -15,24 +15,19 @@ describe('HomeScreen: the backup reminder', () => {
   it('shows no reminder to a new user', async () => {
     renderWithProviders(<HomeScreen />)
 
-    await waitFor(() => {
-      expect(screen.getByRole('link', { name: 'My coping library' })).toBeInTheDocument()
-    })
+    await screen.findByRole('region', { name: 'Summary' })
+
     expect(screen.queryByRole('region', { name: 'Backup reminder' })).not.toBeInTheDocument()
   })
 
-  it('shows it below the settle card and above the coping library link when a backup is due', async () => {
+  it('shows it below the settle card when a backup is due', async () => {
     await addMoodEntry(oneEmotion('calm', 4))
     renderWithProviders(<HomeScreen />)
 
     const reminder = await screen.findByRole('region', { name: 'Backup reminder' })
     const settle = screen.getByRole('link', { name: 'Need to settle?' })
-    const library = screen.getByRole('link', { name: 'My coping library' })
 
     expect(settle.compareDocumentPosition(reminder) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(
-      reminder.compareDocumentPosition(library) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy()
   })
 
   it('gives focus to the page heading when "Not now" is chosen, since the button goes away', async () => {
@@ -59,18 +54,16 @@ describe('HomeScreen: the summary panel', () => {
     expect(screen.getByRole('radio', { name: '30 days' })).not.toBeChecked()
   })
 
-  it('puts the panel below the backup reminder and above the coping library link', async () => {
+  it('puts the panel below the backup reminder, last on the page', async () => {
     await addMoodEntry(oneEmotion('calm', 4))
     renderWithProviders(<HomeScreen />)
 
     const reminder = await screen.findByRole('region', { name: 'Backup reminder' })
     const summary = await screen.findByRole('region', { name: 'Summary' })
-    const library = screen.getByRole('link', { name: 'My coping library' })
 
     expect(
       reminder.compareDocumentPosition(summary) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy()
-    expect(summary.compareDocumentPosition(library) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it('leaves the settle card first, and the quick actions above the panel', async () => {
@@ -91,7 +84,6 @@ describe('HomeScreen: the summary panel', () => {
     const emotions = await screen.findByRole('heading', { name: 'Named most often' })
     const challenged = screen.getByRole('region', { name: 'Challenged thoughts' })
     const tested = screen.getByRole('region', { name: 'Tested thoughts' })
-    const library = screen.getByRole('link', { name: 'My coping library' })
 
     expect(screen.getByRole('region', { name: 'Summary' })).toContainElement(challenged)
     expect(
@@ -100,7 +92,7 @@ describe('HomeScreen: the summary panel', () => {
     expect(
       challenged.compareDocumentPosition(tested) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy()
-    expect(tested.compareDocumentPosition(library) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(screen.getByRole('region', { name: 'Summary' })).toContainElement(tested)
   })
 
   it('counts what is stored, in plain numbers', async () => {
@@ -140,19 +132,15 @@ describe('HomeScreen: the quick actions', () => {
     expect(feel.compareDocumentPosition(thought) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
-  it('puts them above the backup reminder and the coping library link', async () => {
+  it('puts them above the backup reminder', async () => {
     await addMoodEntry(oneEmotion('calm', 4))
     renderWithProviders(<HomeScreen />)
 
     const reminder = await screen.findByRole('region', { name: 'Backup reminder' })
     const thought = screen.getByRole('link', { name: 'Write down a thought' })
-    const library = screen.getByRole('link', { name: 'My coping library' })
 
     expect(
       thought.compareDocumentPosition(reminder) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy()
-    expect(
-      reminder.compareDocumentPosition(library) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy()
   })
 
@@ -184,13 +172,11 @@ describe('HomeScreen', () => {
     expect(card).toHaveAccessibleDescription(/a few taps away/i)
   })
 
-  it('offers a link to the coping library', () => {
+  it('does not link to the coping library: it is reached from the settle screen', () => {
     renderWithProviders(<HomeScreen />)
 
-    expect(screen.getByRole('link', { name: 'My coping library' })).toHaveAttribute(
-      'href',
-      '/coping',
-    )
+    expect(screen.queryByRole('link', { name: /coping library/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Back to home' })).not.toBeInTheDocument()
   })
 
   it('tells the user their data stays on their device', () => {

@@ -1,11 +1,9 @@
 import { Button, Container, Heading, Stack, Text, VisuallyHidden } from '@chakra-ui/react'
 import { type ReactElement, useEffect, useRef, useState } from 'react'
-import { LuArrowLeft, LuPlus } from 'react-icons/lu'
-import { Link } from 'react-router'
+import { LuPlus } from 'react-icons/lu'
 
 import CopingForm from '@/coping/CopingForm'
 import CopingList from '@/coping/CopingList'
-import { paths } from '@/navigation/paths'
 
 export default function CopingScreen(): ReactElement {
   const [adding, setAdding] = useState(false)
@@ -25,12 +23,6 @@ export default function CopingScreen(): ReactElement {
   return (
     <Container maxW="lg" px="6" py="10">
       <Stack gap="6">
-        <Button asChild variant="ghost" minH="12" alignSelf="flex-start">
-          <Link to={paths.home}>
-            <LuArrowLeft aria-hidden="true" />
-            Back to home
-          </Link>
-        </Button>
         <Stack gap="2">
           <Heading as="h1" size="2xl" color="colorPalette.fg">
             Coping library

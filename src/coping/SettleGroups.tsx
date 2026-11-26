@@ -15,26 +15,19 @@ const GROUP_LABELS: Readonly<Record<CopingType, string>> = {
 
 type ItemCardsProps = {
   items: readonly CopingItem[]
-  /** Calming words are shown larger, since they are meant to be read and said. */
-  large?: boolean
 }
 
-function ItemCards({ items, large = false }: ItemCardsProps): ReactElement {
+function ItemCards({ items }: ItemCardsProps): ReactElement {
   return (
     <Box as="ul" display="flex" flexDirection="column" gap="3" listStyleType="none" m="0" p="0">
       {items.map((item) => (
         <Box key={item.id} as="li" bg="bg.muted" borderRadius="xl" p="4">
-          <Text fontSize={large ? '2xl' : 'lg'} fontWeight="semibold" overflowWrap="anywhere">
+          {/* The same look as a built-in technique: a green title, and the content indented. */}
+          <Heading as="h3" size="md" color="colorPalette.fg" overflowWrap="anywhere">
             {item.text}
-          </Text>
+          </Heading>
           {item.detail ? (
-            <Text
-              mt="1"
-              fontSize="lg"
-              color="fg.muted"
-              whiteSpace="pre-wrap"
-              overflowWrap="anywhere"
-            >
+            <Text mt="2" ps="5" fontSize="lg" whiteSpace="pre-wrap" overflowWrap="anywhere">
               {item.detail}
             </Text>
           ) : null}
@@ -72,7 +65,7 @@ export default function SettleGroups({ state }: SettleGroupsProps): ReactElement
             </Heading>
             <Box display="flex" flexDirection="column" gap="3">
               {type === 'do' ? <StarterTechniques /> : null}
-              {group.length === 0 ? null : <ItemCards items={group} large={type === 'say'} />}
+              {group.length === 0 ? null : <ItemCards items={group} />}
               {type === 'do' && state.status === 'error' ? (
                 <Box role="status" bg="bg.muted" borderRadius="xl" p="4">
                   Your own items could not be loaded right now. The built-in techniques are still
