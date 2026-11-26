@@ -1,14 +1,28 @@
 import { Button, Container, Heading, Stack, Text } from '@chakra-ui/react'
 import { type ReactElement, useEffect, useRef, useState } from 'react'
 import { LuPlus } from 'react-icons/lu'
+import { useLocation, useNavigate } from 'react-router'
 
+import { wantsOpenForm } from '@/navigation/openForm'
 import ThoughtRecordFlow from '@/thoughts/ThoughtRecordFlow'
 import ThoughtRecordList from '@/thoughts/ThoughtRecordList'
 
 export default function ThoughtsScreen(): ReactElement {
-  const [adding, setAdding] = useState(false)
+  const location = useLocation()
+  const navigate = useNavigate()
+  // Read once, when the screen appears: a quick action on Home asks for the capture to be open.
+  const [requested] = useState(() => wantsOpenForm(location.state))
+  const [adding, setAdding] = useState(requested)
   const newButtonRef = useRef<HTMLButtonElement>(null)
   const wasAdding = useRef(false)
+
+  // The request is used once. It is cleared only when it was there, so the notes the list keeps
+  // in the same history entry are left alone.
+  useEffect(() => {
+    if (requested) {
+      void navigate(location.pathname, { replace: true, state: null })
+    }
+  }, [requested, navigate, location.pathname])
 
   useEffect(() => {
     if (wasAdding.current && !adding) {

@@ -1,9 +1,11 @@
-import { Button, chakra, Container, Heading, Stack, Text } from '@chakra-ui/react'
+import { Button, chakra, Container, Flex, Heading, Stack, Text } from '@chakra-ui/react'
 import { type ReactElement, useId, useRef } from 'react'
-import { LuHeart } from 'react-icons/lu'
+import { LuHeart, LuMessageCircle, LuSmile } from 'react-icons/lu'
 import { Link } from 'react-router'
 
 import BackupReminder from '@/backup/BackupReminder'
+import HomeSummary from '@/insights/HomeSummary'
+import { openFormRequest } from '@/navigation/openForm'
 import { paths } from '@/navigation/paths'
 
 const CardLink = chakra(Link)
@@ -57,11 +59,26 @@ export default function HomeScreen(): ReactElement {
             See what can help, a few taps away.
           </Text>
         </CardLink>
+        <Flex gap="3" wrap="wrap">
+          <Button asChild size="lg" minH="12" flex="1 1 12rem">
+            <Link to={paths.mood} state={openFormRequest}>
+              <LuSmile aria-hidden="true" />
+              Log how I feel
+            </Link>
+          </Button>
+          <Button asChild size="lg" minH="12" flex="1 1 12rem">
+            <Link to={paths.thoughts} state={openFormRequest}>
+              <LuMessageCircle aria-hidden="true" />
+              Write down a thought
+            </Link>
+          </Button>
+        </Flex>
         <BackupReminder
           onSnoozed={() => {
             headingRef.current?.focus()
           }}
         />
+        <HomeSummary />
         <Button asChild variant="outline" size="lg" minH="12" width="full">
           <Link to={paths.coping}>
             <LuHeart aria-hidden="true" />

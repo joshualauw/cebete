@@ -45,6 +45,128 @@ describe('HomeScreen: the backup reminder', () => {
   })
 })
 
+describe('HomeScreen: the summary panel', () => {
+  beforeEach(async () => {
+    await db.moodEntries.clear()
+    await db.thoughtRecords.clear()
+  })
+
+  it('shows the panel with its toggle, starting on 7 days', async () => {
+    renderWithProviders(<HomeScreen />)
+
+    expect(await screen.findByRole('region', { name: 'Summary' })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: '7 days' })).toBeChecked()
+    expect(screen.getByRole('radio', { name: '30 days' })).not.toBeChecked()
+  })
+
+  it('puts the panel below the backup reminder and above the coping library link', async () => {
+    await addMoodEntry(oneEmotion('calm', 4))
+    renderWithProviders(<HomeScreen />)
+
+    const reminder = await screen.findByRole('region', { name: 'Backup reminder' })
+    const summary = await screen.findByRole('region', { name: 'Summary' })
+    const library = screen.getByRole('link', { name: 'My coping library' })
+
+    expect(
+      reminder.compareDocumentPosition(summary) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    expect(summary.compareDocumentPosition(library) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('leaves the settle card first, and the quick actions above the panel', async () => {
+    renderWithProviders(<HomeScreen />)
+
+    const settle = screen.getByRole('link', { name: 'Need to settle?' })
+    const thought = screen.getByRole('link', { name: 'Write down a thought' })
+    const summary = await screen.findByRole('region', { name: 'Summary' })
+
+    expect(settle.compareDocumentPosition(thought) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(thought.compareDocumentPosition(summary) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('shows the belief-change blocks inside the panel, below the most frequent emotions', async () => {
+    await addMoodEntry(oneEmotion('calm', 4))
+    renderWithProviders(<HomeScreen />)
+
+    const emotions = await screen.findByRole('heading', { name: 'Named most often' })
+    const challenged = screen.getByRole('region', { name: 'Challenged thoughts' })
+    const tested = screen.getByRole('region', { name: 'Tested thoughts' })
+    const library = screen.getByRole('link', { name: 'My coping library' })
+
+    expect(screen.getByRole('region', { name: 'Summary' })).toContainElement(challenged)
+    expect(
+      emotions.compareDocumentPosition(challenged) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    expect(
+      challenged.compareDocumentPosition(tested) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    expect(tested.compareDocumentPosition(library) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('counts what is stored, in plain numbers', async () => {
+    await addMoodEntry(oneEmotion('calm', 4))
+    await addMoodEntry(oneEmotion('sad', 6))
+    renderWithProviders(<HomeScreen />)
+
+    expect(
+      await screen.findByText('Last 7 days: 2 mood entries, no thought records'),
+    ).toBeInTheDocument()
+  })
+})
+
+describe('HomeScreen: the quick actions', () => {
+  beforeEach(async () => {
+    await db.moodEntries.clear()
+  })
+
+  it('offers "Log how I feel" and "Write down a thought", with their sections as targets', () => {
+    renderWithProviders(<HomeScreen />)
+
+    expect(screen.getByRole('link', { name: 'Log how I feel' })).toHaveAttribute('href', '/mood')
+    expect(screen.getByRole('link', { name: 'Write down a thought' })).toHaveAttribute(
+      'href',
+      '/thoughts',
+    )
+  })
+
+  it('puts them below the settle card, so the settle card stays first', () => {
+    renderWithProviders(<HomeScreen />)
+
+    const settle = screen.getByRole('link', { name: 'Need to settle?' })
+    const feel = screen.getByRole('link', { name: 'Log how I feel' })
+    const thought = screen.getByRole('link', { name: 'Write down a thought' })
+
+    expect(settle.compareDocumentPosition(feel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(feel.compareDocumentPosition(thought) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('puts them above the backup reminder and the coping library link', async () => {
+    await addMoodEntry(oneEmotion('calm', 4))
+    renderWithProviders(<HomeScreen />)
+
+    const reminder = await screen.findByRole('region', { name: 'Backup reminder' })
+    const thought = screen.getByRole('link', { name: 'Write down a thought' })
+    const library = screen.getByRole('link', { name: 'My coping library' })
+
+    expect(
+      thought.compareDocumentPosition(reminder) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    expect(
+      reminder.compareDocumentPosition(library) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+  })
+
+  it('keeps the icons away from assistive technology', () => {
+    renderWithProviders(<HomeScreen />)
+
+    for (const name of ['Log how I feel', 'Write down a thought']) {
+      const icon = screen.getByRole('link', { name }).querySelector('svg')
+
+      expect(icon).toHaveAttribute('aria-hidden', 'true')
+    }
+  })
+})
+
 describe('HomeScreen', () => {
   it('shows the app name and a friendly welcome message', () => {
     renderWithProviders(<HomeScreen />)
