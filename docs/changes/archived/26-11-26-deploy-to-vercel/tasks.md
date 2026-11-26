@@ -47,13 +47,13 @@ The browser keeps cebete's data per exact web address. A different address, such
 
 Do these on your phone, and again in a desktop browser.
 
-- [ ] **Open the address.** Home loads, with the logo beside the title.
-- [ ] **Direct links.** Open `/mood`, `/thoughts`, `/coping` and `/settle` by typing the address or from a bookmark. Each shows its own screen, not a not-found page.
-- [ ] **Reload on a record.** Create a thought record, open it, and reload the page. The same record screen returns. An unknown address such as `/nowhere` goes to Home.
-- [ ] **Install.** On Android Chrome, choose Install app. On iPhone Safari, choose Share, then Add to Home Screen. The app opens on its own, without the browser bars, with the cebete icon.
-- [ ] **Offline.** After one visit, switch on airplane mode and open the installed app. Every screen opens. Add a mood entry offline and see it saved.
-- [ ] **Save a backup.** In Settings, choose Export backup. A file is saved or offered to you. Check where it ends up on iPhone, which handles downloads differently. Then import that file and confirm the entries come back.
-- [ ] **Update.** Deploy a small visible change. Open the installed app, close it, and open it again. The new version appears on a later visit.
-- [ ] **The address rule.** Open a preview address. The data is empty, which is expected and is why previews are throwaway.
+- [x] **Open the address.** Home loads, with the logo beside the title.
+- [x] **Direct links.** Open `/mood`, `/thoughts`, `/coping` and `/settle` by typing the address or from a bookmark. Each shows its own screen, not a not-found page.
+- [x] **Reload on a record.** Create a thought record, open it, and reload the page. The same record screen returns. An unknown address such as `/nowhere` goes to Home.
+- [x] **Install.** On Android Chrome, choose Install app. On iPhone Safari, choose Share, then Add to Home Screen. The app opens on its own, without the browser bars, with the cebete icon.
+- [x] **Offline.** After one visit, switch on airplane mode and open the installed app. Every screen opens. Add a mood entry offline and see it saved.
+- [x] **Save a backup.** In Settings, choose Export backup. A file is saved or offered to you. Check where it ends up on iPhone, which handles downloads differently. Then import that file and confirm the entries come back.
+- [x] **Update.** Deploy a small visible change. Open the installed app, close it, and open it again. The new version appears on a later visit.
+- [x] **The address rule.** Open a preview address. The data is empty, which is expected and is why previews are throwaway.
 
 On iPhone, Safari can clear a website's stored data after about a week without use, unless the site is installed to the Home Screen. Installing it, and keeping backups, is the safeguard.

@@ -2,10 +2,10 @@
 title: Deploy to Vercel
 type: chore
 priority: high
-status: in-progress
+status: done
 date: 2026-11-26
 modules: [deployment, app-shell]
-synced: false
+synced: true
 epic: public-launch
 ---
 
@@ -57,9 +57,9 @@ The `deployment` doc explains the hosting setup, and lists the device checks: in
 
 ## Acceptance Criteria
 
-- [ ] When the hosted site is opened directly at a section address, that section's screen appears.
-- [ ] When the user reloads on a thought record's address, the same record screen appears.
-- [ ] When the user visits the site, it can be installed as an app, and after the first visit it opens offline.
-- [ ] When a new version is deployed, the installed app picks it up on a later visit.
+- [x] When the hosted site is opened directly at a section address, that section's screen appears.
+- [x] When the user reloads on a thought record's address, the same record screen appears.
+- [x] When the user visits the site, it can be installed as an app, and after the first visit it opens offline.
+- [x] When a new version is deployed, the installed app picks it up on a later visit.
 - [x] When the page is opened, it carries a description and a theme colour.
-- [ ] The `deployment` doc explains the hosting, the rule about the web address and the data, and the device checklist.
+- [x] The `deployment` doc explains the hosting, the rule about the web address and the data, and the device checklist.

@@ -17,6 +17,7 @@ flowchart TD
 - **Sections and addresses:** Home (`/`), Mood (`/mood`), Thoughts (`/thoughts`, with one record at `/thoughts/:id`) and Settings (`/settings`). The section is part of the address, so a reload or the browser's back and forward buttons keep the user in place. The coping library (`/coping`) and the quick "Need to settle?" screen (`/settle`) have no bar item. The settle screen is entered from Home, and the library only from the settle screen. Unknown addresses go to Home. Home shows the app logo beside the "cebete" heading, a short welcome, a calm "Need to settle?" card (always first), two quick actions, "Log how I feel" and "Write down a thought", a gentle backup reminder when one is due (see [backup](../backup/spec.md)), and a short summary of the last week or month (see [insights](../insights/spec.md)); the other screens host their features.
 - **Quick actions:** each opens its section with the entry form already open: Mood with the new-entry form (see [mood-log](../mood-log/spec.md)), Thoughts with the guided capture (see [thoughts](../thoughts/spec.md)). The request travels in the navigation history entry, is read once when the section appears, and is then cleared by replacing the entry, so one tap of Back returns to Home and a reload does not reopen the form. A section opened from the bottom bar or by its address never shows a form, and the form opens even while the list is loading or cannot be loaded.
 - **Bottom bar:** fixed on every screen, with an icon and a label per section. The current section is highlighted and marked as current, also on an address below it such as one thought record. Home is also current on the coping library and the settle screen, which it hosts. It is a navigation landmark named "Main" and holds at most five items (four used), so a new module must earn a place or live inside a section.
+- **About:** Settings shows an About section below Backup: the app name and its version, a short privacy statement (everything stays on the device, nothing is sent anywhere, no analytics, and backup files are plain text so should be kept safe) and a note that cebete is a self-help tool, not a substitute for professional care or emergency help. It holds no link, so it works fully offline. The version is the one in `package.json`, passed to the app at build time.
 - **Look:** Chakra UI with a calm teal main colour on faint teal-tinted surfaces and soft dark text. Light only. The theme is defined in one place.
 - **Install:** the manifest names the app "cebete", opens it standalone from `/`, uses the brand teal as theme colour, and declares the standard, 512 and maskable icons.
 - **Offline:** after the first visit the service worker serves the whole app, including every section and record address, from its cache. New versions install quietly and take over on the next visit.
@@ -42,11 +43,12 @@ flowchart TD
 | `src/main.tsx`, `src/App.tsx` | Entry point (theme, router, storage startup) and the page frame with the routes and bar |
 | `src/screens/`              | The Home, Mood, Thoughts, thought record, coping library, settle and Settings screens |
 | `src/mood/`, `src/thoughts/`, `src/coping/`, `src/backup/`, `src/insights/` | The feature modules |
+| `src/about/`, `src/env.d.ts` | The About section and the build-time version constant it shows |
 | `src/shared/`               | Controls used by more than one feature module                        |
 | `src/navigation/`           | Addresses, the bar's items, the rule for the current item, the open-form request, the bar and its sizing |
 | `src/theme/`                | The palettes and the theme definition                                |
-| `pwa.config.ts`, `vite.config.ts` | Manifest and service worker settings; Vite and Vitest configuration |
-| `public/`, `scripts/`       | Generated icons and the icon generator (`npm run icons`)             |
+| `pwa.config.ts`, `vite.config.ts` | Manifest and service worker settings; Vite and Vitest configuration, including the version constant |
+| `public/`, `scripts/`       | Generated icons and the icon generator (`npm run icons`), and the README banner generator (see [deployment](../deployment/spec.md)) |
 | `tests/`                    | All tests, mirroring `src/`                                          |
 
 The five checks are the npm scripts `typecheck`, `format`, `lint`, `build` and `test`, run in that order (see the project's code conventions in `.claude/rules/`).
@@ -56,7 +58,7 @@ The five checks are the npm scripts `typecheck`, `format`, `lint`, `build` and `
 - **Calm colours:** warnings and errors use muted tones, never a vivid red. Key text and background pairs must meet a 4.5:1 contrast ratio; tests enforce it.
 - **Light only:** the page declares a light colour scheme, so the browser's dark preference changes nothing.
 - **Bar and phones:** tap targets are at least 56 px tall, the bar stays clear of a notch or home indicator, and the page reserves room so the bar never covers content. Home is current only on Home itself and on the addresses it hosts, never on another section.
-- **Clean addresses need host support:** reloading on `/mood` or `/thoughts/7` works offline through the service worker and in the preview server, but a plain static host must send every address to `index.html`.
+- **Clean addresses need host support:** reloading on `/mood` or `/thoughts/7` works offline through the service worker and in the preview server, but a plain static host must send every address to `index.html`. The production host does this (see [deployment](../deployment/spec.md)).
 - **Bundle size:** a single script of roughly 600 kB (about 180 kB compressed), mostly Chakra UI. The build's chunk-size warning is not suppressed.
 - Every icon in the manifest must be a real PNG of the declared size; a test enforces this.
 - ESLint is pinned to version 9 because the accessibility plugin does not yet support version 10.
@@ -71,3 +73,4 @@ The five checks are the npm scripts `typecheck`, `format`, `lint`, `build` and `
 - [coping](../coping/spec.md): the feature entered from Home through the settle screen.
 - [backup](../backup/spec.md): the feature shown in the Settings section.
 - [insights](../insights/spec.md): the summary panel shown on Home.
+- [deployment](../deployment/spec.md): how the app is hosted and checked on a device.
