@@ -50,6 +50,29 @@ describe('README.md: what it tells a visitor', () => {
     expect(readme).toMatch(/export a backup first/i)
   })
 
+  it('credits the book it draws on, with every author, before the licence', () => {
+    expect(readme).toMatch(/^## Inspired by$/m)
+    expect(readme).toContain(
+      'CBT Toolbox for Children & Adolescents: Over 200 Worksheets & Exercises for Trauma, ADHD, Autism, Anxiety, Depression & Conduct Disorders',
+    )
+
+    for (const author of [
+      'Lisa Weed Phifer',
+      'Amanda K. Crowder',
+      'Tracy Elsenraat',
+      'Robert Hull',
+    ]) {
+      expect(readme).toContain(author)
+    }
+
+    expect(readme.indexOf('## Inspired by')).toBeLessThan(readme.indexOf('## Licence'))
+  })
+
+  it('says it is independent, not affiliated with or endorsed by the authors or the publisher', () => {
+    expect(readme).toMatch(/independent project/i)
+    expect(readme).toMatch(/not affiliated with or endorsed by the authors or the publisher/i)
+  })
+
   it('names the licence and points at the file, which exists', () => {
     expect(readme).toContain('MIT')
     expect(readme).toContain('(LICENSE)')
