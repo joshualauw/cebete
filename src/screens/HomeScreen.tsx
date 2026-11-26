@@ -1,4 +1,4 @@
-import { Button, chakra, Container, Flex, Heading, Stack, Text } from '@chakra-ui/react'
+import { Button, chakra, Container, Flex, Heading, Image, Stack, Text } from '@chakra-ui/react'
 import { type ReactElement, useId, useRef } from 'react'
 import { LuMessageCircle, LuSmile } from 'react-icons/lu'
 import { Link } from 'react-router'
@@ -20,16 +20,20 @@ export default function HomeScreen(): ReactElement {
     <Container maxW="lg" px="6" py="10">
       <Stack gap="6">
         <Stack gap="3">
-          <Heading
-            as="h1"
-            ref={headingRef}
-            tabIndex={-1}
-            size="2xl"
-            color="colorPalette.fg"
-            outline="none"
-          >
-            cebete
-          </Heading>
+          <Flex align="center" gap="3">
+            {/* Decorative: the title beside it already says "cebete". */}
+            <Image src="/icon.svg" alt="" boxSize="12" borderRadius="xl" flexShrink="0" />
+            <Heading
+              as="h1"
+              ref={headingRef}
+              tabIndex={-1}
+              size="3xl"
+              color="colorPalette.fg"
+              outline="none"
+            >
+              cebete
+            </Heading>
+          </Flex>
           <Text fontSize="lg" color="fg.muted">
             Welcome back. A calm place to notice how you feel, with everything kept on your device.
           </Text>

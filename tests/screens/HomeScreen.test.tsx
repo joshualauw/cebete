@@ -1,4 +1,6 @@
 import { fireEvent, screen } from '@testing-library/react'
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { db } from '@/db/db'
@@ -152,6 +154,44 @@ describe('HomeScreen: the quick actions', () => {
 
       expect(icon).toHaveAttribute('aria-hidden', 'true')
     }
+  })
+})
+
+describe('HomeScreen: the logo beside the title', () => {
+  it('shows the app logo to the left of the title, as a decorative image', () => {
+    const { container } = renderWithProviders(<HomeScreen />)
+
+    const logo = container.querySelector('img')
+    const title = screen.getByRole('heading', { level: 1, name: 'cebete' })
+
+    expect(logo).not.toBeNull()
+    expect(logo).toHaveAttribute('src', '/icon.svg')
+    expect(logo).toHaveAttribute('alt', '')
+    expect(logo?.compareDocumentPosition(title)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(logo?.parentElement).toBe(title.parentElement)
+  })
+
+  it('keeps the logo out of the title, so the heading is still just "cebete"', () => {
+    renderWithProviders(<HomeScreen />)
+
+    const title = screen.getByRole('heading', { level: 1, name: 'cebete' })
+
+    expect(title.querySelector('img')).toBeNull()
+    expect(title).toHaveTextContent(/^cebete$/)
+  })
+
+  it('does not announce the logo as an image', () => {
+    renderWithProviders(<HomeScreen />)
+
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
+  })
+
+  it('points at a logo file that really is shipped with the app', () => {
+    const { container } = renderWithProviders(<HomeScreen />)
+    const src = container.querySelector('img')?.getAttribute('src') ?? ''
+
+    expect(src).not.toBe('')
+    expect(existsSync(join(process.cwd(), 'public', src))).toBe(true)
   })
 })
 
