@@ -1,6 +1,6 @@
 ## Summary
 
-Coping is cebete's personal library of things that help the user cope: something to do, something to keep nearby, calming words, and true things about themselves. It is built while calm, so it is to hand when worry rises. It is managed on its own screen, entered from Home, and is kept only on the device. A quick "Need to settle?" screen, also entered from Home, shows the library next to a few built-in techniques, so it helps even before the user has added anything. It does not cover guided animations or timers, photos or files, intensity or tags, or links from thought records or body areas.
+Coping is cebete's personal library of things that help the user cope: something to do, something to keep nearby, calming words, and true things about themselves. It is built while calm, so it is to hand when worry rises. It is managed on its own screen, reached from the "Need to settle?" screen, and is kept only on the device. That quick screen, entered from Home, shows the library next to a few built-in techniques, so it helps even before the user has added anything. It does not cover guided animations or timers, photos or files, intensity or tags, or links from thought records or body areas.
 
 ## How it works
 
@@ -8,7 +8,7 @@ Coping is cebete's personal library of things that help the user cope: something
 flowchart TD
     A[User opens Home] --> S[Need to settle? card]
     S --> T[Quick-use screen: built-in techniques and the user's items]
-    A --> B[My coping library]
+    T --> B[Edit my coping library]
     B --> C{Items loaded?}
     C -- loading --> D[Nothing shown yet]
     C -- none --> E[Friendly empty state]
@@ -24,7 +24,7 @@ flowchart TD
     L --> M[Item removed, told how many are left]
 ```
 
-- **Entry:** Home has a "Need to settle?" card to `/settle` and a "My coping library" link to `/coping`. Neither has a bottom bar item; Home stays highlighted on both (see [app-shell](../app-shell/spec.md)). Each screen has a "Back to home" link.
+- **Entry:** Home has a "Need to settle?" card to `/settle`, and the library is reached only from there, through "Edit my coping library" to `/coping`. Neither has a bottom bar item; Home stays highlighted on both (see [app-shell](../app-shell/spec.md)). The settle screen has a "Back to home" link. The library page has no back link of its own, so going back relies on the browser or phone back button, which returns to the settle screen.
 - **The list:** four groups in a fixed order: Do, Keep nearby, Tell myself, About me. A group with no items is left out. Within a group, items keep the order they were added. While the first read is under way nothing is shown, so the empty state never flashes. If items cannot be loaded, a muted message appears and the rest of the screen keeps working.
 - **The kinds:**
   - **Do:** something to do now, such as slow breathing; the detail can hold the steps.
@@ -38,10 +38,10 @@ flowchart TD
 - **The quick-use screen:** built for a hard moment, with no typing and no editing. It shows, in order:
   - **Do:** the built-in techniques first, each with numbered steps, then the user's own actions with their detail.
   - **Keep nearby:** the user's items, with detail.
-  - **Tell myself:** the user's calming words, in larger text.
+  - **Tell myself:** the user's calming words.
   - **Remember:** the user's About me items, named for what they are in this moment: reminders.
 
-  A group with nothing in it is left out, except Do, which always has the built-in techniques. While the items load the techniques are already shown. Once it is known the library is empty, a gentle prompt invites the user to add items, and a link opens the library. A short calm note says cebete is a self-help tool and not a substitute for professional care or emergency help. The screen follows the library live.
+  The user's own items look like the built-in techniques in every group: a green title at the same size, with the detail indented beneath it. A group with nothing in it is left out, except Do, which always has the built-in techniques. While the items load the techniques are already shown. Once it is known the library is empty, a gentle prompt invites the user to add items, and a link opens the library. A short calm note says cebete is a self-help tool and not a substitute for professional care or emergency help. The screen follows the library live.
 
 ## Data and files
 

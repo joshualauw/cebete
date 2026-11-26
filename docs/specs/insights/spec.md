@@ -21,7 +21,7 @@ flowchart TD
     E --> J[Switch 7 or 30 days: header, bars and belief change update]
 ```
 
-- **The panel:** a labelled "Summary" region on Home, below the backup reminder and above the coping library link. The settle card always stays first (see [app-shell](../app-shell/spec.md)).
+- **The panel:** a labelled "Summary" region on Home, below the backup reminder, last on the page. The settle card always stays first (see [app-shell](../app-shell/spec.md)).
 - **The toggle:** "7 days" and "30 days", as large real radio buttons. It starts on 7 days at every visit and is not remembered.
 - **The range:** the last 7 or 30 days including today, counted by the user's local day, so it begins at local midnight 6 or 29 days ago. Mood entries and thought records are placed by the time they happened. The range has no end, since nothing can have happened later.
 - **The header:** a line such as "Last 7 days: 5 mood entries, 3 thought records", with the singular for one and "no" for none. It is announced politely when the range changes.
